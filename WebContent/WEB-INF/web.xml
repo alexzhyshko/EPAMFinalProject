@@ -39,7 +39,7 @@
     <filter-class>main.java.filter.AuthenticationFilter</filter-class>
     <init-param>
         <param-name>active</param-name>
-        <param-value>false</param-value>
+        <param-value>true</param-value>
     </init-param>
 </filter>
  

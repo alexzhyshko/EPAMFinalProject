@@ -1,4 +1,4 @@
-package main.java;
+package main.java.controller;
 
 import java.io.IOException;
 
@@ -10,6 +10,7 @@ import application.context.annotation.Inject;
 import application.context.annotation.Mapping;
 import application.context.annotation.RestController;
 import application.context.annotation.mapping.RequestType;
+import main.java.Service;
 
 
 @Component

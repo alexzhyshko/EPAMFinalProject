@@ -48,27 +48,27 @@ public class Router {
 		} catch (NoSuchMethodException | SecurityException | IllegalAccessException
 				| IllegalArgumentException | InvocationTargetException | NullPointerException e) {
 			e.printStackTrace();
-			resp.setStatus(404);
+			resp.setStatus(405);
 		}
 	}
 
 	private Route getRouteByPath(HashMap<String, Route> routes, HttpServletRequest req, String path) {
 		StringBuffer fullPath = new StringBuffer(path);
-		String queryString = "";
 		if (req.getQueryString() != null) {
-			queryString = req.getQueryString();
-			Arrays.stream(queryString.split("[?&]")).filter(e -> !e.isBlank()).forEach(e -> fullPath.append(":arg"));
+			for(String str : req.getParameterMap().keySet()) {
+				fullPath.append(":arg");
+			}
 		}
 		if (routes.get(fullPath.toString()) != null) {
 			return routes.get(fullPath.toString());
 		}
-		String[] URLparts = Arrays.stream(path.split("/")).filter(e -> !e.isBlank()).collect(Collectors.toList())
+		String[] URLparts = Arrays.stream(path.split("/")).filter(e -> !e.trim().isEmpty()).collect(Collectors.toList())
 				.toArray(new String[] {});
 		List<String> filteredByStructure = routes.keySet().stream()
 				.filter(e -> e.split("/").length == URLparts.length + 1).collect(Collectors.toList());
-		String resultPath = null;
+		String resultPath = "/";
 		for (String routeKey : filteredByStructure) {
-			String[] routeKeyParts = Arrays.stream(routeKey.split("/")).filter(e -> !e.isBlank())
+			String[] routeKeyParts = Arrays.stream(routeKey.split("/")).filter(e -> !e.trim().isEmpty())
 					.collect(Collectors.toList()).toArray(new String[] {});
 			for (int partIndex = 0; partIndex < URLparts.length; partIndex++) {
 				if (URLparts[partIndex].equals(routeKeyParts[partIndex])) {
@@ -82,7 +82,6 @@ public class Router {
 				}
 			}
 		}
-
 		return routes.get(resultPath);
 
 	}
