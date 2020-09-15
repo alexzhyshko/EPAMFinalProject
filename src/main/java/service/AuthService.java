@@ -1,26 +1,19 @@
 package main.java.service;
 
-import java.util.HashMap;
-
 import application.context.annotation.Component;
+import application.context.annotation.Inject;
 import main.java.auth.AuthContext;
 import main.java.dto.User;
 
 @Component
 public class AuthService {
 
-	HashMap<String, User> users = new HashMap<>();
-	
-	public boolean createUser(User user) {
-		if(users.containsKey(user.getUsername())) {
-			return false;
-		}
-		users.put(user.getUsername(), user);
-		return true;
-	}
+	@Inject
+	private UserService userService;
+
 	
 	public boolean logout(User user) {
-		if(!users.containsKey(user.getUsername())) {
+		if(!userService.userExists(user)) {
 			return false;
 		}
 		AuthContext.deauthorize(user);
@@ -28,13 +21,11 @@ public class AuthService {
 	}
 	
 	public boolean login(User user) {
-		if(!users.containsKey(user.getUsername())) {
+		if(!userService.userExistsWithPasswordEquals(user)) {
 			return false;
 		}
 		AuthContext.authorize(user);
 		return true;
 	}
-	
-	
 	
 }

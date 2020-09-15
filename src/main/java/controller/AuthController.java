@@ -15,12 +15,12 @@ import application.context.annotation.Mapping;
 import application.context.annotation.RestController;
 import application.context.annotation.mapping.RequestType;
 import main.java.auth.AuthContext;
-import main.java.dto.LoginRequest;
-import main.java.dto.LoginResponse;
-import main.java.dto.LogoutRequest;
-import main.java.dto.RefreshTokenResponse;
-import main.java.dto.RegisterRequest;
 import main.java.dto.User;
+import main.java.dto.request.LoginRequest;
+import main.java.dto.request.LogoutRequest;
+import main.java.dto.request.RegisterRequest;
+import main.java.dto.response.LoginResponse;
+import main.java.dto.response.RefreshTokenResponse;
 import main.java.service.AuthService;
 import main.java.service.TokenService;
 import main.java.service.UserService;
@@ -58,8 +58,8 @@ public class AuthController {
 		response.refreshToken = refreshToken;
 		response.token = jwt;
 		user.setToken(jwt);
-		userService.setToken(user, jwt);
-		userService.setRefreshToken(user, refreshToken);
+		userService.updateToken(user, jwt);
+		userService.updateRefreshToken(user, refreshToken);
 		String jsonResponse = gson.toJson(response);
 		AuthContext.authorize(user);
 		resp.getWriter().append(jsonResponse).flush();
@@ -72,7 +72,7 @@ public class AuthController {
 		RegisterRequest requestObj = gson.fromJson(body, RegisterRequest.class);
 		User user = User.builder().name(requestObj.name).username(requestObj.username).surname(requestObj.surname)
 				.password(requestObj.password).build();
-		authService.createUser(user);
+		userService.createUser(user);
 		resp.getWriter().append("Created").flush();
 		resp.setStatus(201);
 	}

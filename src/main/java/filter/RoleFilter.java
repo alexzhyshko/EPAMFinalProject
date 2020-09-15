@@ -13,21 +13,25 @@ import javax.servlet.http.HttpServletResponse;
 
 import application.context.ApplicationContext;
 import application.context.annotation.Component;
-import io.jsonwebtoken.ExpiredJwtException;
 import main.java.auth.AuthContext;
+import main.java.dto.Role;
+import main.java.dto.User;
 import main.java.service.TokenService;
+import main.java.service.UserService;
 
 @Component
-public class AuthenticationFilter implements Filter {
+public class RoleFilter implements Filter {
 
 	private FilterConfig config = null;
 	private boolean active = false;
 
 	private TokenService tokenService = (TokenService) ApplicationContext.getSingletonComponent(TokenService.class);
 
+	private UserService userService = (UserService) ApplicationContext.getSingletonComponent(UserService.class);
+
 	@Override
-	public void init(FilterConfig config) throws ServletException {
-		this.config = config;
+	public void init(FilterConfig fConfig) throws ServletException {
+		this.config = fConfig;
 		String act = config.getInitParameter("active");
 		if (act != null)
 			active = act.equalsIgnoreCase("true");
@@ -66,21 +70,23 @@ public class AuthenticationFilter implements Filter {
 			httpRes.getWriter().append("Forbidden").flush();
 			return;
 		}
+		// get user using JWT
+		String username = tokenService.getUsernameFromJwt(jwt);
+		User user = userService.getUserByUsername(username);
+		Role userRole = user.getRole();
 
-		boolean tokenValid = false;
-		try {
-			// try to validate token
-			tokenValid = tokenService.validateToken(jwt);
-		} catch (ExpiredJwtException expired) {
-			tokenValid = false;
-		}
-		if (tokenValid) {
-			// if token is valid
+		// check if it is admin and grants all access
+		if (userRole == Role.ADMIN) {
 			chain.doFilter(request, response);
 			return;
 		}
 
-		// else throw 403 Forbidden
+		// check if user has permission to non-admin resources
+		if (!DefaultFilterChecks.checkOnlyAdminResourcesPath(path) && userRole == Role.USER) {
+			chain.doFilter(request, response);
+			return;
+		}
+
 		httpRes.setStatus(403);
 		httpRes.getWriter().append("Forbidden").flush();
 	}
@@ -89,4 +95,5 @@ public class AuthenticationFilter implements Filter {
 	public void destroy() {
 		config = null;
 	}
+
 }

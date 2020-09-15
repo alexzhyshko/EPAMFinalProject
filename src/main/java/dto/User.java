@@ -11,6 +11,7 @@ public class User {
 	private String refreshToken;
 	private String token;
 	private float rating;
+	private Role role;
 	
 	private String password;
 	
@@ -60,6 +61,11 @@ public class User {
 			return this;
 		}
 		
+		public Builder role(Role role) {
+			User.this.role = role;
+			return this;
+		}
+		
 		public User build() {
 			return User.this;
 		}
@@ -91,12 +97,20 @@ public class User {
 		return token;
 	}
 
+	public Role getRole() {
+		return role;
+	}
+	
 	public void setToken(String token) {
 		this.token = token;
 	}
 	
 	public void setRefreshToken(String refreshToken) {
 		this.refreshToken = refreshToken;
+	}
+	
+	public void setRole(Role role) {
+		this.role = role;
 	}
 	
 }

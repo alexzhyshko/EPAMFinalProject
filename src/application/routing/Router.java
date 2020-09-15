@@ -41,6 +41,9 @@ public class Router {
 		}
 		try {
 			Route destinationRoute = getRouteByPath(routes, req, relativePath.toString());
+			if(destinationRoute==null) {
+				throw new NullPointerException("Route for path "+relativePath+" not found for RequestType"+req.getMethod());
+			}
 			Class destinationClass = destinationRoute.getRouteClass();
 			Method destinationMethod = destinationClass.getMethod(destinationRoute.getMethodName(),
 					HttpServletRequest.class, HttpServletResponse.class);

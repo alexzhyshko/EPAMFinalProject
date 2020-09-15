@@ -1,4 +1,4 @@
-package main.java.dto;
+package main.java.dto.request;
 
 public class LoginRequest {
 	public String username;

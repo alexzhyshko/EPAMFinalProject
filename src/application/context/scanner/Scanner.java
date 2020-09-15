@@ -9,16 +9,21 @@ import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
 
+import application.context.annotation.Component;
+import application.context.annotation.Inject;
+import application.context.reader.PropertyReader;
+
+@Component
 public class Scanner {
 
+	@Inject
+	private static PropertyReader propertyReader;
 	
 	//key - filename
 	//value - relative path
 	public static Map<String, String> getAllFilesInProject(String path) throws IOException {
 		HashMap<String, String> result = new HashMap<>();
-		Properties properties = new Properties();
-		properties.load(Scanner.class.getClassLoader().getResourceAsStream("configuration.properties"));
-		path+="WEB-INF/classes"+properties.getProperty("rootScanDirectory");
+		path+="WEB-INF/classes"+propertyReader.getProperty("rootScanDirectory");
 		Collection<File> files = FileUtils.listFiles(new File(path), new String[] {"class"}, true);
 		for(File file : files) {
 			String relativePath = file.getAbsolutePath().split("classes")[1].substring(1).replace("\\", ".");
