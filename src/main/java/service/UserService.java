@@ -11,42 +11,31 @@ public class UserService {
 
 	@Inject
 	private UserRepository userRepository;
-	
+
 	public void updateToken(User user, String newToken) {
 		userRepository.updateTokenByUsername(user.getUsername(), newToken);
 	}
-	
-	public void updateRefreshToken(User user, String newRefreshToken) {
-		userRepository.updateRefreshTokenByUsername(user.getUsername(), newRefreshToken);
+
+	public void deleteToken(String token) {
+		userRepository.deleteToken(token);
 	}
-	
-	public void deleteToken(User user, String newToken) {
-		userRepository.deleteTokenByUsername(user.getUsername(), newToken);
-	}
-	
-	public void deleteRefreshToken(User user, String newRefreshToken) {
-		userRepository.deleteRefreshTokenByUsername(user.getUsername(), newRefreshToken);
-	}
-	
-	public boolean createUser(User user) {
+
+	public boolean tryCreateUser(User user) {
 		user.setRole(Role.USER);
-		return userRepository.createUser(user);
+		return userRepository.tryCreateUser(user);
 	}
-	
-	public User getUserByUsername(String username) {
-		return userRepository.getUserByUsername(username);
+
+	public User getUserByUsernameOrNull(String username) {
+		return userRepository.getUserByUsernameOrNull(username);
 	}
 
 	public boolean userExists(User user) {
-		return getUserByUsername(user.getUsername())!=null;
+		return getUserByUsernameOrNull(user.getUsername()) != null;
 	}
 
 	public boolean userExistsWithPasswordEquals(User user) {
 		User dbUser = userRepository.getUserByUsernameAndPassword(user.getUsername(), user.getPassword());
-		if(dbUser==null || !dbUser.getPassword().equals(user.getPassword())) {
-			return false;
-		}
-		return true;
+		return !(dbUser == null || !dbUser.getPassword().equals(user.getPassword()));
 	}
-	
+
 }

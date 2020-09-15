@@ -59,7 +59,6 @@ public class AuthController {
 		response.token = jwt;
 		user.setToken(jwt);
 		userService.updateToken(user, jwt);
-		userService.updateRefreshToken(user, refreshToken);
 		String jsonResponse = gson.toJson(response);
 		AuthContext.authorize(user);
 		resp.getWriter().append(jsonResponse).flush();
@@ -72,26 +71,31 @@ public class AuthController {
 		RegisterRequest requestObj = gson.fromJson(body, RegisterRequest.class);
 		User user = User.builder().name(requestObj.name).username(requestObj.username).surname(requestObj.surname)
 				.password(requestObj.password).build();
-		userService.createUser(user);
-		resp.getWriter().append("Created").flush();
-		resp.setStatus(201);
+		boolean created = userService.tryCreateUser(user);
+		if(created) {
+			resp.getWriter().append("Created").flush();
+			resp.setStatus(201);
+			return;
+		}
+		resp.getWriter().append("Conflict").flush();
+		resp.setStatus(409);
 	}
 
 	@Mapping(route = "/refreshToken:arg", requestType = RequestType.GET)
 	public void getRefreshTokenRequest(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		String refreshToken = req.getParameter("refreshToken");
 		if (refreshToken == null) {
-			resp.setStatus(400);
+			resp.setStatus(403);
 			return;
 		}
 		User user = AuthContext.getUserByRefreshToken(refreshToken);
 		if (user == null) {
-			resp.setStatus(400);
+			resp.setStatus(403);
 			return;
 		}
 		String refreshTokenOfUser = user.getRefreshToken();
 		if (refreshTokenOfUser == null || !refreshTokenOfUser.equals(refreshToken)) {
-			resp.setStatus(400);
+			resp.setStatus(403);
 			return;
 		}
 		String newRefresh = UUID.randomUUID().toString();
@@ -99,7 +103,6 @@ public class AuthController {
 		user.setRefreshToken(newRefresh);
 		user.setToken(newToken);
 		userService.updateToken(user, newToken);
-		userService.updateRefreshToken(user, newRefresh);
 		RefreshTokenResponse response = new RefreshTokenResponse();
 		response.refreshToken = newRefresh;
 		response.token = newToken;
@@ -120,8 +123,7 @@ public class AuthController {
 			return;
 		}
 		AuthContext.deauthorize(user);
-		userService.deleteToken(user, token);
-		userService.deleteRefreshToken(user, token);
+		userService.deleteToken(token);
 		resp.getWriter().append("OK").flush();
 		resp.setStatus(200);
 	}

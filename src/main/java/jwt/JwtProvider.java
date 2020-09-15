@@ -5,6 +5,7 @@ import java.util.Date;
 
 import application.context.annotation.Component;
 import application.context.annotation.Inject;
+import application.context.reader.PropertyReader;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import main.java.dto.User;
@@ -16,7 +17,13 @@ public class JwtProvider {
 	@Inject
 	private TokenService tokenService;
 	
-	private static final int LIFETIME = 2; //minutes
+	private static PropertyReader propertyReader = new PropertyReader();
+	
+	private int LIFETIME;
+	
+	public JwtProvider() {
+		this.LIFETIME = Integer.parseInt(propertyReader.getProperty("jwt.lifetime"));
+	}
 	
 	public String generateJwt(User user) {
 		String username = user.getUsername();

@@ -19,8 +19,9 @@ public class AnnotationReader {
 			for (Entry<String, String> entry : files.entrySet()) {
 				Class temp = Class.forName(entry.getValue());
 				if (hasComponentAnnotation(temp)) {
-					if (!hasPrototypeAnnotation(temp))
+					if (!hasPrototypeAnnotation(temp)) {
 						ApplicationContext.putIntoSingletonContext(getInstanceOfClass(temp));
+					}
 					else
 						ApplicationContext.putIntoPrototypeContext(getInstanceOfClass(temp));
 					if(hasRestControllerAnnotation(temp)) {

@@ -50,7 +50,7 @@ public class RoleFilter implements Filter {
 
 		// check if path matches filtration exceptions
 		String path = httpReq.getRequestURI().substring(5);
-		if (!DefaultFilterChecks.checkFilterExceptions(path)) {
+		if (DefaultFilterChecks.checkFilterExceptions(path)) {
 			chain.doFilter(request, response);
 			return;
 		}
@@ -72,7 +72,7 @@ public class RoleFilter implements Filter {
 		}
 		// get user using JWT
 		String username = tokenService.getUsernameFromJwt(jwt);
-		User user = userService.getUserByUsername(username);
+		User user = userService.getUserByUsernameOrNull(username);
 		Role userRole = user.getRole();
 
 		// check if it is admin and grants all access

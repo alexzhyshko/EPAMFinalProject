@@ -5,19 +5,16 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
 
 import application.context.annotation.Component;
-import application.context.annotation.Inject;
 import application.context.reader.PropertyReader;
 
 @Component
 public class Scanner {
 
-	@Inject
-	private static PropertyReader propertyReader;
+	private static PropertyReader propertyReader = new PropertyReader();
 	
 	//key - filename
 	//value - relative path
