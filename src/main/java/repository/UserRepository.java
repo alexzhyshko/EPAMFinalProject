@@ -197,7 +197,6 @@ public class UserRepository {
 			ps.setString(2, password);
 			try(ResultSet rs = ps.executeQuery()){
 				while(rs.next()) {
-					System.out.println();
 					return User.builder()
 							.id(UUID.fromString(rs.getString(1)))
 							.username(rs.getString(2))
@@ -206,6 +205,43 @@ public class UserRepository {
 							.rating(rs.getFloat(5))
 							.password(rs.getString(6))
 							.role(Role.valueOf(rs.getString(7)))
+							.build();
+				}
+			}
+			connection.commit();
+		} catch (Exception e) {
+			try {
+				connection.rollback();
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+			e.printStackTrace();
+		}finally {
+			try {
+				connection.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		return null;
+	}
+	
+	
+	
+	public User getUserByToken(String token) {
+		String query = "SELECT `Users`.id, `Users`.username, `Users`.name, `Users`.surname, `Users`.rating, user_roles.name FROM `Users` JOIN Tokens ON Tokens.user_id = `Users`.id JOIN user_roles ON `Users`.role_id = user_roles.id WHERE Tokens.token=?";
+		Connection connection = getNewConnection();
+		try (PreparedStatement ps = connection.prepareStatement(query)) {
+			ps.setString(1, token);
+			try(ResultSet rs = ps.executeQuery()){
+				while(rs.next()) {
+					return User.builder()
+							.id(UUID.fromString(rs.getString(1)))
+							.username(rs.getString(2))
+							.name(rs.getString(3))
+							.surname(rs.getString(4))
+							.rating(rs.getFloat(5))
+							.role(Role.valueOf(rs.getString(6)))
 							.build();
 				}
 			}

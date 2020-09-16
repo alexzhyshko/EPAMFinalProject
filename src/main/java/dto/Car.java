@@ -6,8 +6,12 @@ public class Car {
 	private String plate;
 	private String manufacturer;
 	private String model;
+	private String category;
+	private int passengerCount;
 	private float priceMultiplier;
 	private Status status;
+	private Coordinates coordinates;
+	
 	
 	public static Builder builder() {
 		return new Car().new Builder();
@@ -35,6 +39,17 @@ public class Car {
 			return this;
 		}
 		
+		public Builder category(String text) {
+			Car.this.category = text;
+			return this;
+		}
+		
+		public Builder passengerCount(int count) {
+			Car.this.passengerCount = count;
+			return this;
+		}
+		
+		
 		public Builder priceMultiplier(float number) {
 			Car.this.priceMultiplier = number;
 			return this;
@@ -45,6 +60,11 @@ public class Car {
 			return this;
 		}
 		
+		public Builder coordinates(Coordinates coordinates) {
+			Car.this.coordinates = coordinates;
+			return this;
+		}
+		
 		public Car build() {
 			return Car.this;
 		}
@@ -52,7 +72,11 @@ public class Car {
 		
 	}
 
-	public String getplate() {
+	public int getId() {
+		return id;
+	}
+	
+	public String getPlate() {
 		return plate;
 	}
 
@@ -63,9 +87,25 @@ public class Car {
 	public String getManufacturer() {
 		return manufacturer;
 	}
+	
+	public String getCategory() {
+		return category;
+	}
+
+	public int getPassengerCount() {
+		return passengerCount;
+	}
 
 	public Status getStatus() {
 		return status;
+	}
+	
+	public Coordinates getCoordinates() {
+		return coordinates;
+	}
+	
+	public float getPriceMultiplier() {
+		return priceMultiplier;
 	}
 	
 	public void setStatus(Status status) {

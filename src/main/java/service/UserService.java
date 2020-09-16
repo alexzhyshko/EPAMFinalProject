@@ -37,5 +37,9 @@ public class UserService {
 		User dbUser = userRepository.getUserByUsernameAndPassword(user.getUsername(), user.getPassword());
 		return !(dbUser == null || !dbUser.getPassword().equals(user.getPassword()));
 	}
+	
+	public User getUserByToken(String token) {
+		return userRepository.getUserByToken(token);
+	}
 
 }

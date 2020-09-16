@@ -24,7 +24,7 @@ public class AuthContext {
 	
 	public static boolean isAuthorized(User user) {
 		User authorizedInstance = authorizedUsers.get(user.getUsername());
-		if(authorizedInstance==null) {
+		if(authorizedInstance==null || user == null) {
 			return false;
 		}
 		return user.getName().equals(authorizedInstance.getName()) && user.getSurname().equals(authorizedInstance.getSurname()) && user.getUsername().equals(authorizedInstance.getUsername());

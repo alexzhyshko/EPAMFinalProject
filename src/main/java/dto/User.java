@@ -4,13 +4,6 @@ import java.util.UUID;
 
 public class User {
 
-	@Override
-	public String toString() {
-		return "User [id=" + id + ", username=" + username + ", name=" + name + ", surname=" + surname
-				+ ", refreshToken=" + refreshToken + ", token=" + token + ", rating=" + rating + ", role=" + role
-				+ ", password=" + password + "]";
-	}
-
 	private UUID id;
 	private String username;
 	private String name;
@@ -80,6 +73,10 @@ public class User {
 		
 	}
 
+	public UUID getId() {
+		return id;
+	}
+	
 	public String getUsername() {
 		return username;
 	}
