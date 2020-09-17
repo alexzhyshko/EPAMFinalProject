@@ -1,5 +1,8 @@
 package main.java.service;
 
+import java.util.List;
+import java.util.UUID;
+
 import application.context.annotation.Component;
 import application.context.annotation.Inject;
 import main.java.dto.Role;
@@ -40,6 +43,14 @@ public class UserService {
 	
 	public User getUserByToken(String token) {
 		return userRepository.getUserByToken(token);
+	}
+	
+	public User getUserById(UUID id) {
+		return userRepository.getUserByID(id);
+	}
+	
+	public List<User> getAllUsers(){
+		return userRepository.getAllUsers();
 	}
 
 }

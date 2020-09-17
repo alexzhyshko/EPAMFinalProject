@@ -20,4 +20,21 @@ public class CarService {
 		return car;
 	}
 	
+	public Car getCarByPlacesCount(int placesCount, String userLocale) {
+		Car car = carRepository.getCarByPlacesCount(placesCount, userLocale);
+		if(car == null) {
+			throw new NoSuitableCarFound("No car found for "+placesCount+" places");
+		}
+		return car;
+	}
+	
+	
+	public Car getCarByOrderId(int orderId, String userLocale) {
+		return carRepository.getCarByOrderId(orderId, userLocale);
+	}
+	
+	public void setCarStatus(int carid, int status) {
+		carRepository.setCarStatus(carid, status);
+	}
+	
 }

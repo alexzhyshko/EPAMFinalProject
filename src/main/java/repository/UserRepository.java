@@ -5,6 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import application.connection.DBConnectionManager;
@@ -183,6 +185,42 @@ public class UserRepository {
 	}
 
 	
+	
+	public User getUserByID(UUID id) {
+		String query = "SELECT `Users`.id, `Users`.username, `Users`.name, `Users`.surname, `Users`.rating, `Users`.password, user_roles.name FROM `Users` JOIN user_roles ON `Users`.role_id = user_roles.id WHERE `Users`.id=?";
+		Connection connection = getNewConnection();
+		try (PreparedStatement ps = connection.prepareStatement(query)) {
+			ps.setString(1, id.toString());
+			try(ResultSet rs = ps.executeQuery()){
+				while(rs.next()) {
+					return User.builder()
+							.id(UUID.fromString(rs.getString(1)))
+							.username(rs.getString(2))
+							.name(rs.getString(3))
+							.surname(rs.getString(4))
+							.rating(rs.getFloat(5))
+							.password(rs.getString(6))
+							.role(Role.valueOf(rs.getString(7)))
+							.build();
+				}
+			}
+			connection.commit();
+		} catch (Exception e) {
+			try {
+				connection.rollback();
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+			e.printStackTrace();
+		}finally {
+			try {
+				connection.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		return null;
+	}
 	/**
 	 * Returns a {@code User}, if such exists in database. If not, returns {@code null}
 	 * @param username - used to identify user in database
@@ -261,6 +299,42 @@ public class UserRepository {
 			}
 		}
 		return null;
+	}
+	
+	
+	public List<User> getAllUsers(){
+		List<User> result = new ArrayList<>();
+		Connection connection = getNewConnection();
+		String query = "SELECT `Users`.id, `Users`.username, `Users`.name, `Users`.surname, `Users`.rating, user_roles.name FROM `Users` JOIN Tokens ON Tokens.user_id = `Users`.id JOIN user_roles ON `Users`.role_id = user_roles.id";
+		try (PreparedStatement ps = connection.prepareStatement(query)) {
+			try(ResultSet rs = ps.executeQuery()){
+				while(rs.next()) {
+					result.add(User.builder()
+							.id(UUID.fromString(rs.getString(1)))
+							.username(rs.getString(2))
+							.name(rs.getString(3))
+							.surname(rs.getString(4))
+							.rating(rs.getFloat(5))
+							.role(Role.valueOf(rs.getString(6)))
+							.build());
+				}
+			}
+			connection.commit();
+		} catch (Exception e) {
+			try {
+				connection.rollback();
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+			e.printStackTrace();
+		}finally {
+			try {
+				connection.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		return result;
 	}
 
 }

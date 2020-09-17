@@ -61,6 +61,7 @@ public class AuthController {
 		userService.updateToken(user, jwt);
 		String jsonResponse = gson.toJson(response);
 		AuthContext.authorize(user);
+		resp.setContentType("text/json");
 		resp.getWriter().append(jsonResponse).flush();
 		resp.setStatus(200);
 	}
@@ -107,6 +108,7 @@ public class AuthController {
 		response.refreshToken = newRefresh;
 		response.token = newToken;
 		String jsonResponse = gson.toJson(response);
+		resp.setContentType("text/json");
 		resp.getWriter().append(jsonResponse).flush();
 		resp.setStatus(200);
 	}
