@@ -76,7 +76,7 @@ public class CarRepository {
 				+ " JOIN Translations ON Cars.category_translation_id = Translations.id"
 				+ " JOIN Coordinates ON Cars.coordinates_id = Coordinates.id"
 				+ " JOIN Driving ON Cars.id = Driving.car_id"
-				+ " WHERE Cars.passengerCount=? AND Cars.status_id=1 AND Driving.dayOfDriving=CURDATE()";
+				+ " WHERE Cars.passengerCount>=? AND Cars.status_id=1 AND Driving.dayOfDriving=CURDATE()";
 		Connection connection = getNewConnection();
 		try (PreparedStatement ps = connection.prepareStatement(query)) {
 			ps.setInt(1, passengerCount);

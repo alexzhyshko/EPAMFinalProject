@@ -84,7 +84,7 @@ public class OrderController {
 		Route routeCreated = routeService.tryGetRoute(departure, destination);
 		Car car = null;
 		try {
-			car = carService.getCarByPlacesCountAndCategory(requestObj.numberOfPassengers, requestObj.carCategory,
+			car = carService.getCarByPlacesCountAndCategory(requestObj.numberOfPassengers, requestObj.carCategory ,
 					userLocale);
 		} catch (Exception e) {
 			if (anyCategory) {
@@ -118,7 +118,7 @@ public class OrderController {
 		order.timeToArrival = arrivalTime;
 		resp.setContentType("text/json");
 		resp.getWriter().append(gson.toJson(order)).flush();
-		resp.setStatus(201);
+		resp.setStatus(200);
 	}
 
 	@Mapping(route = "/order/get/:pathVar/byUserId/:pathVar", requestType = RequestType.GET)

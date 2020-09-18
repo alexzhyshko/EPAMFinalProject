@@ -1,5 +1,6 @@
 package application.routing;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -28,7 +29,7 @@ public class Router {
 		this.deleteRoutes = new HashMap<>();
 	}
 
-	private void route(HttpServletRequest req, HttpServletResponse resp, HashMap<String, Route> routes) {
+	private void route(HttpServletRequest req, HttpServletResponse resp, HashMap<String, Route> routes) throws IOException {
 		StringBuffer fullPath = req.getRequestURL();
 		StringBuilder relativePath = new StringBuilder();
 		if (fullPath.toString().split("/").length > 4) {
@@ -42,7 +43,9 @@ public class Router {
 		try {
 			Route destinationRoute = getRouteByPath(routes, req, relativePath.toString());
 			if(destinationRoute==null) {
-				throw new NullPointerException("Route for path "+relativePath+" not found for RequestType"+req.getMethod());
+				resp.getWriter().append("Not found").flush();
+				resp.setStatus(404);
+				return;
 			}
 			Class destinationClass = destinationRoute.getRouteClass();
 			Method destinationMethod = destinationClass.getMethod(destinationRoute.getMethodName(),
@@ -89,19 +92,19 @@ public class Router {
 
 	}
 
-	public void routeGet(HttpServletRequest req, HttpServletResponse resp) {
+	public void routeGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		route(req, resp, getRoutes);
 	}
 
-	public void routePost(HttpServletRequest req, HttpServletResponse resp) {
+	public void routePost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		route(req, resp, postRoutes);
 	}
 
-	public void routePut(HttpServletRequest req, HttpServletResponse resp) {
+	public void routePut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		route(req, resp, putRoutes);
 	}
 
-	public void routeDelete(HttpServletRequest req, HttpServletResponse resp) {
+	public void routeDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		route(req, resp, deleteRoutes);
 	}
 
