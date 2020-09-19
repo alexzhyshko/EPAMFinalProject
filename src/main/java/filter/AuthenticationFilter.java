@@ -33,24 +33,12 @@ public class AuthenticationFilter implements Filter {
 			active = act.equalsIgnoreCase("true");
 	}
 
-	private void setAccessControlHeaders(HttpServletResponse resp) {
-		resp.setHeader("Access-Control-Allow-Origin", "http://localhost:4200");
-		resp.setHeader("Access-Control-Allow-Methods", "*");
-		resp.setHeader("Access-Control-Allow-Headers", "*");
-		resp.setHeader("Access-Control-Expose-Headers", "*");
-		resp.setHeader("Access-Control-Allow-Credentials", "true");
-	  }
+	
 	
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
 			throws IOException, ServletException {
 		HttpServletRequest httpReq = (HttpServletRequest) request;
 		HttpServletResponse httpRes = (HttpServletResponse) response;
-		setAccessControlHeaders(httpRes);
-		if ("OPTIONS".equalsIgnoreCase(httpReq.getMethod())) {
-			httpRes.setStatus(HttpServletResponse.SC_OK);
-			return;
-        }
-		
 		if (!active) {
 			// if filter is deactivated
 			chain.doFilter(httpReq, httpRes);

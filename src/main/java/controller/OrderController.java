@@ -53,11 +53,6 @@ public class OrderController {
 	@Mapping(route = "/order/create:arg:arg", requestType = RequestType.POST)
 	public void onOrderCreateRequestReceived(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		String userLocale = req.getHeader("User_Locale");
-		if (userLocale == null) {
-			resp.getWriter().append("User locale not set").flush();
-			resp.setStatus(403);
-			return;
-		}
 		boolean anyCategory = false;
 		try {
 			anyCategory = Boolean.valueOf(req.getParameter("anyCategory"));
@@ -124,11 +119,6 @@ public class OrderController {
 	@Mapping(route = "/order/get/:pathVar/byUserId/:pathVar", requestType = RequestType.GET)
 	public void getOrdersByUserId(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		String userLocale = req.getHeader("User_Locale");
-		if (userLocale == null) {
-			resp.getWriter().append("User locale not set").flush();
-			resp.setStatus(403);
-			return;
-		}
 		String[] pathParts = req.getPathTranslated().replace("\\", "/").split("/");
 		String type = pathParts[pathParts.length - 3];
 		UUID userid = UUID.fromString(pathParts[pathParts.length - 1]);
@@ -152,11 +142,6 @@ public class OrderController {
 	@Mapping(route = "/order/get/byId:arg", requestType = RequestType.GET)
 	public void getOrderById(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		String userLocale = req.getHeader("User_Locale");
-		if (userLocale == null) {
-			resp.getWriter().append("User locale not set").flush();
-			resp.setStatus(403);
-			return;
-		}
 		int orderId = -1;
 		try {
 			orderId = Integer.parseInt(req.getParameter("orderId"));
@@ -173,11 +158,6 @@ public class OrderController {
 	@Mapping(route = "/order/finish:arg", requestType = RequestType.GET)
 	public void onOrderFinishRequestREceived(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		String userLocale = req.getHeader("User_Locale");
-		if (userLocale == null) {
-			resp.getWriter().append("User locale not set").flush();
-			resp.setStatus(403);
-			return;
-		}
 		int orderId = -1;
 		try {
 			orderId = Integer.parseInt(req.getParameter("orderId"));

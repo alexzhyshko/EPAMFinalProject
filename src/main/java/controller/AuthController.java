@@ -57,6 +57,7 @@ public class AuthController {
 		LoginResponse response = new LoginResponse();
 		response.refreshToken = refreshToken;
 		response.token = jwt;
+		response.username = user.getUsername();
 		user.setToken(jwt);
 		userService.updateToken(user, jwt);
 		String jsonResponse = gson.toJson(response);

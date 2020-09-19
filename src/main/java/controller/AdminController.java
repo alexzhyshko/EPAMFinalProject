@@ -27,11 +27,6 @@ public class AdminController {
 	@Mapping(route = "/admin/getAllOrdersByUsers", requestType = RequestType.GET)
 	public void getAllOrdersByUsers(HttpServletRequest req, HttpServletResponse resp) throws IOException{
 		String userLocale = req.getHeader("User_Locale");
-		if (userLocale == null) {
-			resp.getWriter().append("User locale not set").flush();
-			resp.setStatus(403);
-			return;
-		}
 		resp.setContentType("text/json");
 		resp.getWriter().append(gson.toJson(orderService.getAllOrders(userLocale))).flush();
 		resp.setStatus(200);

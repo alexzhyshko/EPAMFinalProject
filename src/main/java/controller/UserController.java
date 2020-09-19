@@ -23,7 +23,7 @@ public class UserController {
 	@Inject
 	private UserService userService;
 
-	private Gson gson;
+	private Gson gson = new Gson();
 
 	@Mapping(route = "/user/getById:arg", requestType = RequestType.GET)
 	public void getUserById(HttpServletRequest req, HttpServletResponse resp) throws IOException {
