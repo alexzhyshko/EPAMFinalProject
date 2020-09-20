@@ -33,8 +33,6 @@ public class AuthenticationFilter implements Filter {
 			active = act.equalsIgnoreCase("true");
 	}
 
-	
-	
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
 			throws IOException, ServletException {
 		HttpServletRequest httpReq = (HttpServletRequest) request;
@@ -62,7 +60,13 @@ public class AuthenticationFilter implements Filter {
 
 		// get JWT from headers and check user authorization
 		String jwt = authTokenHeader.substring(7);
-		if (!AuthContext.isAuthorized(jwt)) {
+		try {
+			if (!AuthContext.isAuthorized(jwt)) {
+				httpRes.setStatus(403);
+				httpRes.getWriter().append("Forbidden").flush();
+				return;
+			}
+		} catch (ExpiredJwtException e) {
 			httpRes.setStatus(403);
 			httpRes.getWriter().append("Forbidden").flush();
 			return;

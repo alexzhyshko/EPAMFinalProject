@@ -22,6 +22,7 @@ import main.java.dto.Order;
 import main.java.dto.Route;
 import main.java.dto.User;
 import main.java.dto.request.RouteCreateRequest;
+import main.java.dto.response.RouteDetails;
 import main.java.exception.NoSuitableCarFound;
 import main.java.service.CarService;
 import main.java.service.DriverService;
@@ -79,7 +80,7 @@ public class OrderController {
 		Route routeCreated = routeService.tryGetRoute(departure, destination);
 		Car car = null;
 		try {
-			car = carService.getCarByPlacesCountAndCategory(requestObj.numberOfPassengers, requestObj.carCategory ,
+			car = carService.getCarByPlacesCountAndCategory(requestObj.numberOfPassengers, requestObj.carCategory,
 					userLocale);
 		} catch (Exception e) {
 			if (anyCategory) {
@@ -92,7 +93,7 @@ public class OrderController {
 					return;
 				}
 			} else if (anyCountOfCars) {
-				//TODO implement functionality to find a couple of cars to match order
+				// TODO implement functionality to find a couple of cars to match order
 				resp.getWriter().append("Couldn't find a car to match passengers count").flush();
 				resp.setStatus(404);
 				return;
@@ -113,6 +114,33 @@ public class OrderController {
 		order.timeToArrival = arrivalTime;
 		resp.setContentType("text/json");
 		resp.getWriter().append(gson.toJson(order)).flush();
+		resp.setStatus(200);
+	}
+
+	@Mapping(route = "/order/getRouteDetails", requestType = RequestType.POST)
+	public void getRouteDetails(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+		String userLocale = req.getHeader("User_Locale");
+		String body = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+		RouteCreateRequest requestObj = gson.fromJson(body, RouteCreateRequest.class);
+		Coordinates departure = new Coordinates(requestObj.departureLongitude, requestObj.departureLatitude);
+		Coordinates destination = new Coordinates(requestObj.destinationLongitude, requestObj.destinationLatitude);
+		Route routeCreated = routeService.tryGetRoute(departure, destination);
+		Car car = null;
+		try {
+			car = carService.getCarByPlacesCountAndCategory(requestObj.numberOfPassengers, requestObj.carCategory,
+				userLocale);
+		}catch(NoSuitableCarFound e) {
+			resp.getWriter().append("No car found").flush();
+			resp.setStatus(404);
+			return;
+		}
+		RouteDetails response = new RouteDetails();
+		Coordinates carDeparture = car.getCoordinates();
+		Coordinates carDestination = departure;
+		Route carArrivalRoute = routeService.tryGetRoute(carDeparture, carDestination);
+		response.price = orderService.getRoutePrice(routeCreated, car);
+		response.arrivalTime = carArrivalRoute.time;
+		resp.getWriter().append(gson.toJson(response)).flush();
 		resp.setStatus(200);
 	}
 

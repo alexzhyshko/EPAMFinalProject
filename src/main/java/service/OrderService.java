@@ -26,8 +26,12 @@ public class OrderService {
 	private static final int STANDART_FEE_PER_KILOMETER = 20;
 	
 	public Order tryPlaceOrder(Route route, User customer, Driver driver, Car car) {
-		int price = Math.round(route.distance*car.getPriceMultiplier()*STANDART_FEE_PER_KILOMETER);
+		int price = this.getRoutePrice(route, car);
 		return orderRepository.tryCreateOrder(route, customer, driver, car, price);
+	}
+
+	public int getRoutePrice(Route route, Car car) {
+		return Math.round(route.distance*car.getPriceMultiplier()*STANDART_FEE_PER_KILOMETER);
 	}
 	
 	public boolean finishOrder(int orderId) {
