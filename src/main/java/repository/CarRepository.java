@@ -29,7 +29,7 @@ public class CarRepository {
 				+ " JOIN Translations ON Cars.category_translation_id = Translations.id"
 				+ " JOIN Coordinates ON Cars.coordinates_id = Coordinates.id"
 				+ " JOIN Driving ON Cars.id = Driving.car_id"
-				+ " WHERE Cars.passengerCount=? AND Cars.status_id=1 AND UPPER(Translations.text_"+userLocale+")=? AND Driving.dayOfDriving=CURDATE()";
+				+ " WHERE Cars.passengerCount=? AND Cars.status_id=1 AND UPPER(Translations.text_EN)=? AND Driving.dayOfDriving=CURDATE()";
 		Connection connection = getNewConnection();
 		try (PreparedStatement ps = connection.prepareStatement(query)) {
 			ps.setInt(1, passengerCount);
@@ -174,6 +174,34 @@ public class CarRepository {
 				e1.printStackTrace();
 			}
 		}
+	}
+	
+	public String getCategoryByLocale(String category, String locale) {
+		String query = "SELECT Translations.text_"+locale+" FROM Translations WHERE text_EN=?";
+		Connection connection = getNewConnection();
+		try (PreparedStatement ps = connection.prepareStatement(query)) {
+			ps.setString(1, category);
+			try(ResultSet rs = ps.executeQuery()){
+				while(rs.next()) {
+					return rs.getString(1);
+				}
+			}
+			connection.commit();
+		} catch (Exception e) {
+			try {
+				connection.rollback();
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+			e.printStackTrace();
+		}finally {
+			try {
+				connection.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		return null;
 	}
 	
 }

@@ -54,4 +54,38 @@ public class DriverRepository {
 		return null;
 	}
 	
+	
+	public Driver getDriverByOrderId(int id) {
+		String query = "SELECT Drivers.id, Drivers.name, Drivers.surname, Drivers.rating FROM Drivers JOIN Driving ON Driving.driver_id=Drivers.id JOIN Orders ON Orders.driving_id = Driving.id WHERE Orders.id=?";
+		Connection connection = getNewConnection();
+		try (PreparedStatement ps = connection.prepareStatement(query)) {
+			ps.setInt(1, id);
+			try(ResultSet rs = ps.executeQuery()){
+				while(rs.next()) {
+					return Driver.builder()
+							.id(rs.getInt(1))
+							.name(rs.getString(2))
+							.surname(rs.getString(3))
+							.rating(rs.getFloat(4))
+							.build();
+				}
+			}
+			connection.commit();
+		} catch (Exception e) {
+			try {
+				connection.rollback();
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+			e.printStackTrace();
+		}finally {
+			try {
+				connection.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		return null;
+	}
+	
 }

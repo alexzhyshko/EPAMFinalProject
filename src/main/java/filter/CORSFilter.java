@@ -30,6 +30,8 @@ public class CORSFilter implements Filter {
 		resp.setHeader("Access-Control-Allow-Headers", "*");
 		resp.setHeader("Access-Control-Expose-Headers", "*");
 		resp.setHeader("Access-Control-Allow-Credentials", "true");
+		resp.setCharacterEncoding("UTF-8");
+		resp.setHeader("Charset", "UTF-8");
 	}
 
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)

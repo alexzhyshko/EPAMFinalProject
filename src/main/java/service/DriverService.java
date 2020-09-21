@@ -21,4 +21,8 @@ public class DriverService {
 		return driver;
 	}
 	
+	public Driver getDriverByOrderId(int id) {
+		return driverRepository.getDriverByOrderId(id);
+	}
+	
 }

@@ -1,12 +1,15 @@
 package main.java.controller;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.apache.http.HttpStatus;
 
 import com.google.gson.Gson;
 
@@ -16,6 +19,7 @@ import application.context.annotation.Mapping;
 import application.context.annotation.RestController;
 import application.context.annotation.mapping.RequestType;
 import main.java.dto.Car;
+import main.java.dto.CarCategory;
 import main.java.dto.Coordinates;
 import main.java.dto.Driver;
 import main.java.dto.Order;
@@ -119,28 +123,33 @@ public class OrderController {
 
 	@Mapping(route = "/order/getRouteDetails", requestType = RequestType.POST)
 	public void getRouteDetails(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+		List<RouteDetails> response = new ArrayList<>();
 		String userLocale = req.getHeader("User_Locale");
 		String body = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
 		RouteCreateRequest requestObj = gson.fromJson(body, RouteCreateRequest.class);
 		Coordinates departure = new Coordinates(requestObj.departureLongitude, requestObj.departureLatitude);
 		Coordinates destination = new Coordinates(requestObj.destinationLongitude, requestObj.destinationLatitude);
 		Route routeCreated = routeService.tryGetRoute(departure, destination);
-		Car car = null;
-		try {
-			car = carService.getCarByPlacesCountAndCategory(requestObj.numberOfPassengers, requestObj.carCategory,
-				userLocale);
-		}catch(NoSuitableCarFound e) {
-			resp.getWriter().append("No car found").flush();
-			resp.setStatus(404);
-			return;
+		for (CarCategory category : CarCategory.values()) {
+			Car car = null;
+			try {
+				car = carService.getCarByPlacesCountAndCategory(requestObj.numberOfPassengers, category.toString(), userLocale);
+			} catch (NoSuitableCarFound e) {
+				continue;
+			}
+			if (car != null) {
+				RouteDetails details = new RouteDetails();
+				Coordinates carDeparture = car.getCoordinates();
+				Coordinates carDestination = departure;
+				Route carArrivalRoute = routeService.tryGetRoute(carDeparture, carDestination);
+				details.price = orderService.getRoutePrice(routeCreated, car);
+				details.arrivalTime = carArrivalRoute.time;
+				details.categoryLocaleName = carService.getCategoryByLocale(category, userLocale);
+				response.add(details);
+			}
 		}
-		RouteDetails response = new RouteDetails();
-		Coordinates carDeparture = car.getCoordinates();
-		Coordinates carDestination = departure;
-		Route carArrivalRoute = routeService.tryGetRoute(carDeparture, carDestination);
-		response.price = orderService.getRoutePrice(routeCreated, car);
-		response.arrivalTime = carArrivalRoute.time;
-		resp.getWriter().append(gson.toJson(response)).flush();
+		String responseJson = gson.toJson(response);
+		resp.getWriter().append(responseJson).flush();
 		resp.setStatus(200);
 	}
 
@@ -161,6 +170,14 @@ public class OrderController {
 			resp.getWriter().append("Incorrect path variable " + type).flush();
 			resp.setStatus(403);
 			return;
+		}
+		for (Order order : result.stream().filter(e -> e.statusid == 1).collect(Collectors.toList())) {
+			Car car = order.car;
+			Route route = order.route;
+			Coordinates carPosition = car.getCoordinates();
+			Coordinates clientDeparture = route.departure;
+			Route carArrivalRoute = routeService.tryGetRoute(carPosition, clientDeparture);
+			order.timeToArrival = carArrivalRoute.time;
 		}
 		resp.setContentType("text/json");
 		resp.getWriter().append(gson.toJson(result)).flush();
@@ -199,7 +216,7 @@ public class OrderController {
 		if (success) {
 			carService.setCarStatus(car.getId(), 1);
 			resp.getWriter().append("OK").flush();
-			resp.setStatus(200);
+			resp.setStatus(HttpStatus.SC_OK);
 			return;
 		}
 		resp.getWriter().append("Error finishing your order").flush();

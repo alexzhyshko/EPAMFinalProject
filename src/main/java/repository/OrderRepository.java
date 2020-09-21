@@ -133,7 +133,7 @@ public class OrderRepository {
 	public List<Order> getAllOrdersByStatusAndUser(UUID userid, int status, String userLocale) {
 		List<Order> result = new ArrayList<>();
 
-		String query = "SELECT id, price, distance, timeOccupancy, dateOfOrder, departure_coordinate_id, destination_coordinate_id FROM Orders WHERE user_id=? AND status_id=?";
+		String query = "SELECT Orders.id, price, distance, timeOccupancy, dateOfOrder, departure_coordinate_id, destination_coordinate_id, Translations.text_"+userLocale+" FROM Orders JOIN order_status ON order_status.id = orders.status_id JOIN Translations ON Translations.id = order_status.name_translations_id WHERE user_id=? AND status_id=?";
 		Connection connection = getNewConnection();
 
 		int departureCoordId = -1;
@@ -147,6 +147,8 @@ public class OrderRepository {
 					Order order = new Order();
 					order.id = rs.getInt(1);
 					order.price = rs.getFloat(2);
+					order.statusid = status;
+					order.status = rs.getString(8);
 					Route route = new Route();
 					route.distance = rs.getFloat(3);
 					route.time = rs.getInt(4);
@@ -167,7 +169,7 @@ public class OrderRepository {
 			order.customer = user;
 			Car car = carService.getCarByOrderId(order.id, userLocale);
 			order.car = car;
-			Driver driver = driverService.getDriverByCar(car);
+			Driver driver = driverService.getDriverByOrderId(order.id);
 			order.driver = driver;
 			Coordinates departure = coordinateRepository.getCoordinatesById(departureCoordId);
 			Coordinates destination = coordinateRepository.getCoordinatesById(destinationCoordId);
@@ -178,7 +180,7 @@ public class OrderRepository {
 	}
 
 	public Order getOrderById(int orderId, String userLocale) {
-		String query = "SELECT id, price, distance, timeOccupancy, dateOfOrder, departure_coordinate_id, destination_coordinate_id, user_id FROM Orders WHERE id=?";
+		String query = "SELECT id, price, distance, timeOccupancy, dateOfOrder, departure_coordinate_id, destination_coordinate_id, user_id, status_id FROM Orders WHERE id=?";
 		Connection connection = getNewConnection();
 		Order order = new Order();
 		int departureCoordId = -1;
@@ -190,6 +192,7 @@ public class OrderRepository {
 				while (rs.next()) {
 					order.id = rs.getInt(1);
 					order.price = rs.getFloat(2);
+					order.statusid = rs.getInt(9);
 					Route route = new Route();
 					route.distance = rs.getFloat(3);
 					route.time = rs.getInt(4);

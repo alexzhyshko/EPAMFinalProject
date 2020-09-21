@@ -12,4 +12,6 @@ public class Order {
 	public Driver driver;
 	public int timeToArrival;
 	public LocalDateTime dateOfOrder;
+	public String status;
+	public int statusid;
 }

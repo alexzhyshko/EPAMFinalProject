@@ -3,6 +3,7 @@ package main.java.service;
 import application.context.annotation.Component;
 import application.context.annotation.Inject;
 import main.java.dto.Car;
+import main.java.dto.CarCategory;
 import main.java.exception.NoSuitableCarFound;
 import main.java.repository.CarRepository;
 
@@ -35,6 +36,10 @@ public class CarService {
 	
 	public void setCarStatus(int carid, int status) {
 		carRepository.setCarStatus(carid, status);
+	}
+	
+	public String getCategoryByLocale(CarCategory category, String locale) {
+		return carRepository.getCategoryByLocale(category.toString(), locale);
 	}
 	
 }
