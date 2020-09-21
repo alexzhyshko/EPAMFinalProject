@@ -84,15 +84,16 @@ public class OrderController {
 		Route routeCreated = routeService.tryGetRoute(departure, destination);
 		Car car = null;
 		try {
-			car = carService.getCarByPlacesCountAndCategory(requestObj.numberOfPassengers, requestObj.carCategory,
-					userLocale);
+			car = carService.getNearestCarByPlacesCountAndCategory(requestObj.numberOfPassengers, requestObj.carCategory,
+					userLocale, departure);
 		} catch (Exception e) {
+			e.printStackTrace();
 			if (anyCategory) {
 				try {
-					car = carService.getCarByPlacesCount(requestObj.numberOfPassengers, userLocale);
+					car = carService.getNearestCarByPlacesCount(requestObj.numberOfPassengers, userLocale, departure);
 				} catch (NoSuitableCarFound noCarFoundExc) {
 					noCarFoundExc.printStackTrace();
-					resp.getWriter().append("Couldn't find a car to match passengers count").flush();
+					resp.getWriter().append(noCarFoundExc.getMessage()).flush();
 					resp.setStatus(404);
 					return;
 				}
@@ -133,7 +134,7 @@ public class OrderController {
 		for (CarCategory category : CarCategory.values()) {
 			Car car = null;
 			try {
-				car = carService.getCarByPlacesCountAndCategory(requestObj.numberOfPassengers, category.toString(), userLocale);
+				car = carService.getNearestCarByPlacesCountAndCategory(requestObj.numberOfPassengers, category.toString(), userLocale, departure);
 			} catch (NoSuitableCarFound e) {
 				continue;
 			}
