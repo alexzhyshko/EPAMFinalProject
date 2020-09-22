@@ -49,8 +49,8 @@ public class AuthController {
 				.refreshToken(refreshToken).build();
 		boolean login = authService.login(user);
 		if (!login) {
-			resp.setStatus(302);
-			resp.getWriter().append("Register first").flush();
+			resp.setStatus(404);
+			resp.getWriter().append("Incorrect username or password").flush();
 			return;
 		}
 		String jwt = tokenService.generateJwt(user);
@@ -85,6 +85,7 @@ public class AuthController {
 
 	@Mapping(route = "/refreshToken:arg", requestType = RequestType.GET)
 	public void getRefreshTokenRequest(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+		System.out.println("refresh");
 		String refreshToken = req.getParameter("refreshToken");
 		if (refreshToken == null) {
 			resp.setStatus(403);
@@ -112,6 +113,7 @@ public class AuthController {
 		resp.setContentType("text/json");
 		resp.getWriter().append(jsonResponse).flush();
 		resp.setStatus(200);
+		System.out.println("refreshed");
 	}
 	
 	@Mapping(route = "/logout", requestType = RequestType.POST)

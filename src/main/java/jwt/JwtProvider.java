@@ -27,11 +27,11 @@ public class JwtProvider {
 	
 	public String generateJwt(User user) {
 		String username = user.getUsername();
-		String password = user.getPassword();
+		//String password = user.getPassword();
 		String refreshToken = user.getRefreshToken();
 		return Jwts.builder()
 				  .claim("username", username)
-				  .claim("password", password)
+				  //.claim("password", password)
 				  .claim("refreshToken", refreshToken)
 				  .setIssuedAt(toDate(LocalDateTime.now()))
 				  .setExpiration(toDate(LocalDateTime.now().plusMinutes(LIFETIME)))

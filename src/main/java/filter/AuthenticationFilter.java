@@ -60,13 +60,7 @@ public class AuthenticationFilter implements Filter {
 
 		// get JWT from headers and check user authorization
 		String jwt = authTokenHeader.substring(7);
-		try {
-			if (!AuthContext.isAuthorized(jwt)) {
-				httpRes.setStatus(403);
-				httpRes.getWriter().append("Forbidden").flush();
-				return;
-			}
-		} catch (ExpiredJwtException e) {
+		if (!AuthContext.isAuthorized(jwt)) {
 			httpRes.setStatus(403);
 			httpRes.getWriter().append("Forbidden").flush();
 			return;

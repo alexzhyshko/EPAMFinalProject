@@ -4,8 +4,10 @@ import java.util.HashMap;
 
 import application.context.annotation.Component;
 import application.context.annotation.Inject;
+import io.jsonwebtoken.ExpiredJwtException;
 import main.java.dto.User;
 import main.java.jwt.JwtParser;
+import main.java.service.UserService;
 
 @Component
 public class AuthContext {
@@ -15,6 +17,9 @@ public class AuthContext {
 	@Inject
 	private static JwtParser parser;
 	
+	@Inject
+	private static UserService userService;
+	
 	public static void authorize(User user) {
 		if(authorizedUsers.containsKey(user.getUsername())) {
 			return;
@@ -22,26 +27,28 @@ public class AuthContext {
 		authorizedUsers.put(user.getUsername(), user);
 	}
 	
-	public static boolean isAuthorized(User user) {
-		User authorizedInstance = authorizedUsers.get(user.getUsername());
-		if(authorizedInstance==null || user == null) {
-			return false;
-		}
-		return user.getName().equals(authorizedInstance.getName()) && user.getSurname().equals(authorizedInstance.getSurname()) && user.getUsername().equals(authorizedInstance.getUsername());
-	}
-	
 	public static boolean isAuthorized(String jwt) {
 		User authorizedInstance = null;
 		for(User user : authorizedUsers.values()) {
-			if(jwt.equals(user.getToken())) {
+			if(user.getToken().equals(jwt)) {
 				authorizedInstance = user;
 			}
 		}
 		if(authorizedInstance==null) {
+			authorizedInstance = userService.getUserByToken(jwt);
+		}
+		if(authorizedInstance==null) {
 			return false;
 		}
-		String username = (String)parser.parseClaimsFromJwt(jwt).get("username");
-		return authorizedInstance.getUsername().equals(username);
+		try {
+			String username = (String)parser.parseClaimsFromJwt(jwt).get("username");
+			return authorizedInstance.getUsername().equals(username);
+			
+		}catch(ExpiredJwtException e) {
+			//e.printStackTrace();
+			return false;
+		}
+		
 	}
 	
 	public static void deauthorize(User user) {
