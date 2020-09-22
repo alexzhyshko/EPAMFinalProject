@@ -34,11 +34,16 @@ public class AuthContext {
 				authorizedInstance = user;
 			}
 		}
+		boolean needReauth = false;
 		if(authorizedInstance==null) {
+			needReauth = true;
 			authorizedInstance = userService.getUserByToken(jwt);
 		}
 		if(authorizedInstance==null) {
 			return false;
+		}
+		if(needReauth) {
+			authorize(authorizedInstance);
 		}
 		try {
 			String username = (String)parser.parseClaimsFromJwt(jwt).get("username");
