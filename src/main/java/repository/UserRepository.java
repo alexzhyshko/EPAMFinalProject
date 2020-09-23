@@ -12,8 +12,8 @@ import java.util.UUID;
 import application.connection.DBConnectionManager;
 import application.context.annotation.Component;
 import application.context.annotation.Inject;
-import main.java.dto.Role;
-import main.java.dto.User;
+import main.java.entity.Role;
+import main.java.entity.User;
 
 @Component
 public class UserRepository {
@@ -79,6 +79,31 @@ public class UserRepository {
 		}
 	}
 
+	public void updateRefreshTokenByUsername(String username, String refreshToken) {
+		String query = "UPDATE Tokens JOIN Users ON Tokens.user_id = `Users`.id SET Tokens.refreshToken=? WHERE `Users`.username=?";
+		Connection connection = getNewConnection();
+		try (PreparedStatement ps = connection.prepareStatement(query)) {
+			ps.setString(1, refreshToken);
+			ps.setString(2, username);
+			ps.executeUpdate();
+			connection.commit();
+		} catch (Exception e) {
+			e.printStackTrace();
+			try {
+				connection.rollback();
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+		}finally {
+			try {
+				connection.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	
 	public void deleteToken(String newToken) {
 		String query = "DELETE FROM Tokens WHERE token=?";
 		Connection connection = getNewConnection();
@@ -267,7 +292,7 @@ public class UserRepository {
 	
 	
 	public User getUserByToken(String token) {
-		String query = "SELECT `Users`.id, `Users`.username, `Users`.name, `Users`.surname, `Users`.rating, user_roles.name FROM `Users` JOIN Tokens ON Tokens.user_id = `Users`.id JOIN user_roles ON `Users`.role_id = user_roles.id WHERE Tokens.token=?";
+		String query = "SELECT `Users`.id, `Users`.username, `Users`.name, `Users`.surname, `Users`.rating, user_roles.name, Tokens.refreshToken FROM `Users` JOIN Tokens ON Tokens.user_id = `Users`.id JOIN user_roles ON `Users`.role_id = user_roles.id WHERE Tokens.token=?";
 		Connection connection = getNewConnection();
 		try (PreparedStatement ps = connection.prepareStatement(query)) {
 			ps.setString(1, token);
@@ -280,6 +305,7 @@ public class UserRepository {
 							.surname(rs.getString(4))
 							.rating(rs.getFloat(5))
 							.role(Role.valueOf(rs.getString(6)))
+							.refreshToken(rs.getString(7))
 							.build();
 				}
 			}

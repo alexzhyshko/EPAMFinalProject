@@ -14,8 +14,8 @@ import javax.servlet.http.HttpServletResponse;
 import application.context.ApplicationContext;
 import application.context.annotation.Component;
 import main.java.auth.AuthContext;
-import main.java.dto.Role;
-import main.java.dto.User;
+import main.java.entity.Role;
+import main.java.entity.User;
 import main.java.service.TokenService;
 import main.java.service.UserService;
 
@@ -51,6 +51,7 @@ public class RoleFilter implements Filter {
 		// check if path matches filtration exceptions
 		String path = httpReq.getRequestURI().substring(5);
 		if (DefaultFilterChecks.checkFilterExceptions(path)) {
+			System.out.println("passed in role "+path);
 			chain.doFilter(request, response);
 			return;
 		}

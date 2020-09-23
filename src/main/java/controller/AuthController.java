@@ -15,12 +15,12 @@ import application.context.annotation.Mapping;
 import application.context.annotation.RestController;
 import application.context.annotation.mapping.RequestType;
 import main.java.auth.AuthContext;
-import main.java.dto.User;
 import main.java.dto.request.LoginRequest;
 import main.java.dto.request.LogoutRequest;
 import main.java.dto.request.RegisterRequest;
 import main.java.dto.response.LoginResponse;
 import main.java.dto.response.RefreshTokenResponse;
+import main.java.entity.User;
 import main.java.service.AuthService;
 import main.java.service.TokenService;
 import main.java.service.UserService;
@@ -60,6 +60,7 @@ public class AuthController {
 		response.username = user.getUsername();
 		user.setToken(jwt);
 		userService.updateToken(user, jwt);
+		userService.updateRefreshToken(user, refreshToken);
 		String jsonResponse = gson.toJson(response);
 		AuthContext.authorize(user);
 		resp.setContentType("text/json");
@@ -83,15 +84,15 @@ public class AuthController {
 		resp.setStatus(409);
 	}
 
-	@Mapping(route = "/refreshToken:arg", requestType = RequestType.GET)
+	@Mapping(route = "/refreshToken:arg:arg", requestType = RequestType.GET)
 	public void getRefreshTokenRequest(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-		System.out.println("refresh");
 		String refreshToken = req.getParameter("refreshToken");
+		String token = req.getParameter("token");
 		if (refreshToken == null) {
 			resp.setStatus(403);
 			return;
 		}
-		User user = AuthContext.getUserByRefreshToken(refreshToken);
+		User user = AuthContext.getUserByToken(token);
 		if (user == null) {
 			resp.setStatus(403);
 			return;
@@ -113,7 +114,6 @@ public class AuthController {
 		resp.setContentType("text/json");
 		resp.getWriter().append(jsonResponse).flush();
 		resp.setStatus(200);
-		System.out.println("refreshed");
 	}
 	
 	@Mapping(route = "/logout", requestType = RequestType.POST)
@@ -121,8 +121,7 @@ public class AuthController {
 		String body = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
 		LogoutRequest request = gson.fromJson(body, LogoutRequest.class);
 		String token = request.token;
-		String refreshToken = request.refreshToken;
-		User user = AuthContext.getUserByRefreshToken(refreshToken);
+		User user = AuthContext.getUserByToken(token);
 		if (user == null) {
 			resp.setStatus(400);
 			return;

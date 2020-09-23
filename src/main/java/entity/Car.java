@@ -1,4 +1,4 @@
-package main.java.dto;
+package main.java.entity;
 
 public class Car {
 

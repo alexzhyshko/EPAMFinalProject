@@ -8,7 +8,7 @@ import java.sql.SQLException;
 import application.connection.DBConnectionManager;
 import application.context.annotation.Component;
 import application.context.annotation.Inject;
-import main.java.dto.Coordinates;
+import main.java.entity.Coordinates;
 
 @Component
 public class CoordinateRepository {

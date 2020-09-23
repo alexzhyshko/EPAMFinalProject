@@ -46,6 +46,7 @@ public class AuthenticationFilter implements Filter {
 		// check if path matches filtration exceptions
 		String path = httpReq.getRequestURI().substring(5);
 		if (DefaultFilterChecks.checkFilterExceptions(path)) {
+			System.out.println("passed forward "+path);
 			chain.doFilter(httpReq, httpRes);
 			return;
 		}

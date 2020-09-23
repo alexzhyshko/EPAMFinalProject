@@ -8,8 +8,8 @@ import java.sql.SQLException;
 import application.connection.DBConnectionManager;
 import application.context.annotation.Component;
 import application.context.annotation.Inject;
-import main.java.dto.Car;
-import main.java.dto.Driver;
+import main.java.entity.Car;
+import main.java.entity.Driver;
 
 @Component
 public class DriverRepository {

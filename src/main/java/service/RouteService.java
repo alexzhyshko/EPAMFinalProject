@@ -19,9 +19,9 @@ import com.google.gson.Gson;
 
 import application.context.annotation.Component;
 import application.context.reader.PropertyReader;
-import main.java.dto.Coordinates;
-import main.java.dto.Route;
 import main.java.dto.response.routes.RoutesApiResponse;
+import main.java.entity.Coordinates;
+import main.java.entity.Route;
 
 @Component
 public class RouteService {

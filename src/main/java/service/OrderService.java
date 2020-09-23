@@ -7,11 +7,11 @@ import java.util.UUID;
 
 import application.context.annotation.Component;
 import application.context.annotation.Inject;
-import main.java.dto.Car;
-import main.java.dto.Driver;
-import main.java.dto.Order;
-import main.java.dto.Route;
-import main.java.dto.User;
+import main.java.entity.Car;
+import main.java.entity.Driver;
+import main.java.entity.Order;
+import main.java.entity.Route;
+import main.java.entity.User;
 import main.java.repository.OrderRepository;
 
 @Component

@@ -11,7 +11,7 @@ import application.context.annotation.Component;
 import application.context.annotation.Inject;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import main.java.dto.User;
+import main.java.entity.User;
 import main.java.jwt.JwtParser;
 import main.java.jwt.JwtProvider;
 

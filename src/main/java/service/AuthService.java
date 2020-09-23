@@ -3,7 +3,7 @@ package main.java.service;
 import application.context.annotation.Component;
 import application.context.annotation.Inject;
 import main.java.auth.AuthContext;
-import main.java.dto.User;
+import main.java.entity.User;
 
 @Component
 public class AuthService {

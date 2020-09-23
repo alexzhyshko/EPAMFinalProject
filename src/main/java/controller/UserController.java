@@ -13,7 +13,7 @@ import application.context.annotation.Inject;
 import application.context.annotation.Mapping;
 import application.context.annotation.RestController;
 import application.context.annotation.mapping.RequestType;
-import main.java.dto.User;
+import main.java.entity.User;
 import main.java.service.UserService;
 
 @Component

@@ -5,7 +5,7 @@ import java.util.HashMap;
 import application.context.annotation.Component;
 import application.context.annotation.Inject;
 import io.jsonwebtoken.ExpiredJwtException;
-import main.java.dto.User;
+import main.java.entity.User;
 import main.java.jwt.JwtParser;
 import main.java.service.UserService;
 
@@ -21,15 +21,15 @@ public class AuthContext {
 	private static UserService userService;
 	
 	public static void authorize(User user) {
-		if(authorizedUsers.containsKey(user.getUsername())) {
-			return;
-		}
 		authorizedUsers.put(user.getUsername(), user);
 	}
 	
 	public static boolean isAuthorized(String jwt) {
 		User authorizedInstance = null;
 		for(User user : authorizedUsers.values()) {
+			if(user.getToken()==null) {
+				continue;
+			}
 			if(user.getToken().equals(jwt)) {
 				authorizedInstance = user;
 			}
@@ -48,9 +48,7 @@ public class AuthContext {
 		try {
 			String username = (String)parser.parseClaimsFromJwt(jwt).get("username");
 			return authorizedInstance.getUsername().equals(username);
-			
 		}catch(ExpiredJwtException e) {
-			//e.printStackTrace();
 			return false;
 		}
 		
@@ -60,13 +58,8 @@ public class AuthContext {
 		authorizedUsers.remove(user.getUsername());
 	}
 	
-	public static User getUserByRefreshToken(String refreshToken) {
-		for(User user : authorizedUsers.values()) {
-			if(user.getRefreshToken().equals(refreshToken)) {
-				return user;
-			}
-		}
-		return null;
+	public static User getUserByToken(String token) {
+		return userService.getUserByToken(token);
 	}
 	
 }

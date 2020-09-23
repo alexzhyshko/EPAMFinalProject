@@ -18,15 +18,16 @@ import application.context.annotation.Inject;
 import application.context.annotation.Mapping;
 import application.context.annotation.RestController;
 import application.context.annotation.mapping.RequestType;
-import main.java.dto.Car;
-import main.java.dto.CarCategory;
-import main.java.dto.Coordinates;
-import main.java.dto.Driver;
-import main.java.dto.Order;
-import main.java.dto.Route;
-import main.java.dto.User;
 import main.java.dto.request.RouteCreateRequest;
 import main.java.dto.response.RouteDetails;
+import main.java.dto.response.UserOrdersResponse;
+import main.java.entity.Car;
+import main.java.entity.CarCategory;
+import main.java.entity.Coordinates;
+import main.java.entity.Driver;
+import main.java.entity.Order;
+import main.java.entity.Route;
+import main.java.entity.User;
 import main.java.exception.NoSuitableCarFound;
 import main.java.service.CarService;
 import main.java.service.DriverService;
@@ -84,8 +85,8 @@ public class OrderController {
 		Route routeCreated = routeService.tryGetRoute(departure, destination);
 		Car car = null;
 		try {
-			car = carService.getNearestCarByPlacesCountAndCategory(requestObj.numberOfPassengers, requestObj.carCategory,
-					userLocale, departure);
+			car = carService.getNearestCarByPlacesCountAndCategory(requestObj.numberOfPassengers,
+					requestObj.carCategory, userLocale, departure);
 		} catch (Exception e) {
 			e.printStackTrace();
 			if (anyCategory) {
@@ -134,7 +135,8 @@ public class OrderController {
 		for (CarCategory category : CarCategory.values()) {
 			Car car = null;
 			try {
-				car = carService.getNearestCarByPlacesCountAndCategory(requestObj.numberOfPassengers, category.toString(), userLocale, departure);
+				car = carService.getNearestCarByPlacesCountAndCategory(requestObj.numberOfPassengers,
+						category.toString(), userLocale, departure);
 			} catch (NoSuitableCarFound e) {
 				continue;
 			}
@@ -154,12 +156,17 @@ public class OrderController {
 		resp.setStatus(200);
 	}
 
-	@Mapping(route = "/order/get/:pathVar/byUserId/:pathVar", requestType = RequestType.GET)
+	@Mapping(route = "/order/get/byUserId:arg:arg:arg", requestType = RequestType.GET)
 	public void getOrdersByUserId(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		String userLocale = req.getHeader("User_Locale");
-		String[] pathParts = req.getPathTranslated().replace("\\", "/").split("/");
-		String type = pathParts[pathParts.length - 3];
-		UUID userid = UUID.fromString(pathParts[pathParts.length - 1]);
+		String type = req.getParameter("type");
+		UUID userid = UUID.fromString(req.getParameter("userId"));
+		int page = 0;
+		try {
+			page = Integer.parseInt(req.getParameter("page"));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		List<Order> result = null;
 		if ("all".equals(type)) {
 			result = orderService.getAllOrdersByUser(userid, userLocale);
@@ -180,8 +187,14 @@ public class OrderController {
 			Route carArrivalRoute = routeService.tryGetRoute(carPosition, clientDeparture);
 			order.timeToArrival = carArrivalRoute.time;
 		}
+		UserOrdersResponse response = new UserOrdersResponse();
+		response.numberOfPages = result.size() / 5;
+		if (result.size() % 5 != 0) {
+			response.numberOfPages++;
+		}
+		response.orders = result.stream().limit(page * 5 + 5).skip(page * 5).collect(Collectors.toList());
 		resp.setContentType("text/json");
-		resp.getWriter().append(gson.toJson(result)).flush();
+		resp.getWriter().append(gson.toJson(response)).flush();
 		resp.setStatus(200);
 	}
 

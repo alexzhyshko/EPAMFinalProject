@@ -13,7 +13,7 @@ import application.context.annotation.Inject;
 import application.context.annotation.Mapping;
 import application.context.annotation.RestController;
 import application.context.annotation.mapping.RequestType;
-import main.java.dto.Car;
+import main.java.entity.Car;
 import main.java.service.CarService;
 
 @Component
@@ -28,7 +28,7 @@ public class CarController {
 	@Mapping(route = "/car/getAll", requestType = RequestType.GET)
 	public void getAllCars(HttpServletRequest req, HttpServletResponse resp) throws IOException  {
 		String userLocale = req.getHeader("User_Locale");
-		List<Car> allCars = carService.getAllCars(userLocale);
+		List<Car> allCars = carService.getAllAvailableCars(userLocale);
 		resp.setContentType("text/json");
 		resp.getWriter().append(gson.toJson(allCars)).flush();
 		resp.setStatus(200);

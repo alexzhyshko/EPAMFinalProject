@@ -2,8 +2,8 @@ package main.java.service;
 
 import application.context.annotation.Component;
 import application.context.annotation.Inject;
-import main.java.dto.Car;
-import main.java.dto.Driver;
+import main.java.entity.Car;
+import main.java.entity.Driver;
 import main.java.exception.DriverNotFoundException;
 import main.java.repository.DriverRepository;
 

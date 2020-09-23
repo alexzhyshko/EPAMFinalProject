@@ -5,8 +5,8 @@ import java.util.UUID;
 
 import application.context.annotation.Component;
 import application.context.annotation.Inject;
-import main.java.dto.Role;
-import main.java.dto.User;
+import main.java.entity.Role;
+import main.java.entity.User;
 import main.java.repository.UserRepository;
 
 @Component
@@ -17,6 +17,10 @@ public class UserService {
 
 	public void updateToken(User user, String newToken) {
 		userRepository.updateTokenByUsername(user.getUsername(), newToken);
+	}
+	
+	public void updateRefreshToken(User user, String refreshToken) {
+		userRepository.updateRefreshTokenByUsername(user.getUsername(), refreshToken);
 	}
 
 	public void deleteToken(String token) {

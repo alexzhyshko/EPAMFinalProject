@@ -4,9 +4,9 @@ import java.util.List;
 
 import application.context.annotation.Component;
 import application.context.annotation.Inject;
-import main.java.dto.Car;
-import main.java.dto.CarCategory;
-import main.java.dto.Coordinates;
+import main.java.entity.Car;
+import main.java.entity.CarCategory;
+import main.java.entity.Coordinates;
 import main.java.exception.NoSuitableCarFound;
 import main.java.repository.CarRepository;
 
@@ -16,8 +16,8 @@ public class CarService {
 	@Inject
 	private CarRepository carRepository;
 
-	public List<Car> getAllCars(String userLocale){
-		return carRepository.getAllCars(userLocale);
+	public List<Car> getAllAvailableCars(String userLocale){
+		return carRepository.getAllActiveCars(userLocale);
 	}
 	
 	public Car getNearestCarByPlacesCountAndCategory(int placesCount, String carCategory, String userLocale,

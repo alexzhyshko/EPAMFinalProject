@@ -8,7 +8,7 @@ import application.context.annotation.Inject;
 import application.context.reader.PropertyReader;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import main.java.dto.User;
+import main.java.entity.User;
 import main.java.service.TokenService;
 
 @Component
