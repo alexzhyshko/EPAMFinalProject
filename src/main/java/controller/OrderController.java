@@ -187,12 +187,13 @@ public class OrderController {
 			Route carArrivalRoute = routeService.tryGetRoute(carPosition, clientDeparture);
 			order.timeToArrival = carArrivalRoute.time;
 		}
+		int elementsPerPage = 4;
 		UserOrdersResponse response = new UserOrdersResponse();
-		response.numberOfPages = result.size() / 5;
-		if (result.size() % 5 != 0) {
+		response.numberOfPages = result.size() / elementsPerPage;
+		if (result.size() % elementsPerPage != 0) {
 			response.numberOfPages++;
 		}
-		response.orders = result.stream().limit(page * 5 + 5).skip(page * 5).collect(Collectors.toList());
+		response.orders = result.stream().limit(page * elementsPerPage + elementsPerPage).skip(page * elementsPerPage).collect(Collectors.toList());
 		resp.setContentType("text/json");
 		resp.getWriter().append(gson.toJson(response)).flush();
 		resp.setStatus(200);

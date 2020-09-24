@@ -102,13 +102,11 @@ public class AuthController {
 			resp.setStatus(403);
 			return;
 		}
-		String newRefresh = UUID.randomUUID().toString();
 		String newToken = tokenService.generateJwt(user);
-		user.setRefreshToken(newRefresh);
 		user.setToken(newToken);
 		userService.updateToken(user, newToken);
 		RefreshTokenResponse response = new RefreshTokenResponse();
-		response.refreshToken = newRefresh;
+		response.refreshToken = refreshTokenOfUser;
 		response.token = newToken;
 		String jsonResponse = gson.toJson(response);
 		resp.setContentType("text/json");
