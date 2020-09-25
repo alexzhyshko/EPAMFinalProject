@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import application.connection.DBConnectionManager;
@@ -211,14 +212,14 @@ public class UserRepository {
 
 	
 	
-	public User getUserByID(UUID id) {
+	public Optional<User> getUserByID(UUID id) {
 		String query = "SELECT `Users`.id, `Users`.username, `Users`.name, `Users`.surname, `Users`.rating, `Users`.password, user_roles.name FROM `Users` JOIN user_roles ON `Users`.role_id = user_roles.id WHERE `Users`.id=?";
 		Connection connection = getNewConnection();
 		try (PreparedStatement ps = connection.prepareStatement(query)) {
 			ps.setString(1, id.toString());
 			try(ResultSet rs = ps.executeQuery()){
 				while(rs.next()) {
-					return User.builder()
+					return Optional.of(User.builder()
 							.id(UUID.fromString(rs.getString(1)))
 							.username(rs.getString(2))
 							.name(rs.getString(3))
@@ -226,7 +227,7 @@ public class UserRepository {
 							.rating(rs.getFloat(5))
 							.password(rs.getString(6))
 							.role(Role.valueOf(rs.getString(7)))
-							.build();
+							.build());
 				}
 			}
 			connection.commit();
@@ -244,7 +245,7 @@ public class UserRepository {
 				e.printStackTrace();
 			}
 		}
-		return null;
+		return Optional.empty();
 	}
 	/**
 	 * Returns a {@code User}, if such exists in database. If not, returns {@code null}
@@ -252,7 +253,7 @@ public class UserRepository {
 	 * @param password - used to identify user in database
 	 * @return {@code User} or null, if not found
 	 */
-	public User getUserByUsernameAndPassword(String username, String password) {
+	public Optional<User> getUserByUsernameAndPassword(String username, String password) {
 		String query = "SELECT `Users`.id, `Users`.username, `Users`.name, `Users`.surname, `Users`.rating, `Users`.password, user_roles.name FROM `Users` JOIN user_roles ON `Users`.role_id = user_roles.id WHERE `Users`.username=? AND `Users`.password=?";
 		Connection connection = getNewConnection();
 		try (PreparedStatement ps = connection.prepareStatement(query)) {
@@ -260,7 +261,7 @@ public class UserRepository {
 			ps.setString(2, password);
 			try(ResultSet rs = ps.executeQuery()){
 				while(rs.next()) {
-					return User.builder()
+					return Optional.of(User.builder()
 							.id(UUID.fromString(rs.getString(1)))
 							.username(rs.getString(2))
 							.name(rs.getString(3))
@@ -268,7 +269,7 @@ public class UserRepository {
 							.rating(rs.getFloat(5))
 							.password(rs.getString(6))
 							.role(Role.valueOf(rs.getString(7)))
-							.build();
+							.build());
 				}
 			}
 			connection.commit();
@@ -286,19 +287,19 @@ public class UserRepository {
 				e.printStackTrace();
 			}
 		}
-		return null;
+		return Optional.empty();
 	}
 	
 	
 	
-	public User getUserByToken(String token) {
+	public Optional<User> getUserByToken(String token) {
 		String query = "SELECT `Users`.id, `Users`.username, `Users`.name, `Users`.surname, `Users`.rating, user_roles.name, Tokens.token, Tokens.refreshToken FROM `Users` JOIN Tokens ON Tokens.user_id = `Users`.id JOIN user_roles ON `Users`.role_id = user_roles.id WHERE Tokens.token=?";
 		Connection connection = getNewConnection();
 		try (PreparedStatement ps = connection.prepareStatement(query)) {
 			ps.setString(1, token);
 			try(ResultSet rs = ps.executeQuery()){
 				while(rs.next()) {
-					return User.builder()
+					return Optional.of(User.builder()
 							.id(UUID.fromString(rs.getString(1)))
 							.username(rs.getString(2))
 							.name(rs.getString(3))
@@ -307,7 +308,7 @@ public class UserRepository {
 							.role(Role.valueOf(rs.getString(6)))
 							.token(rs.getString(7))
 							.refreshToken(rs.getString(8))
-							.build();
+							.build());
 				}
 			}
 			connection.commit();
@@ -325,7 +326,7 @@ public class UserRepository {
 				e.printStackTrace();
 			}
 		}
-		return null;
+		return Optional.empty();
 	}
 	
 	

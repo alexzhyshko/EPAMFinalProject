@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Optional;
 
 import application.connection.DBConnectionManager;
 import application.context.annotation.Component;
@@ -20,7 +21,7 @@ public class CoordinateRepository {
 		return this.connectionManager.getConnection();
 	}
 
-	public Integer insertCoordinatesAndReturnId(Coordinates coordinates) {
+	public Optional<Integer> insertCoordinatesAndReturnId(Coordinates coordinates) {
 		String insertCoordAndGetId = "INSERT INTO Coordinates(longitude, latitude) VALUES(?,?);";
 		String selectLastInsertId = "SELECT LAST_INSERT_ID();";
 		Connection connection = getNewConnection();
@@ -32,32 +33,32 @@ public class CoordinateRepository {
 			connection.commit();
 			try (ResultSet result = selectDepartureId.executeQuery()) {
 				while (result.next()) {
-					return result.getInt(1);
+					return Optional.of(result.getInt(1));
 				}
 				connection.commit();
-				return null;
+				return Optional.empty();
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-			return null;
+			return Optional.empty();
 		}
 	}
 
-	public Coordinates getCoordinatesById(int coordinatesId) {
+	public Optional<Coordinates> getCoordinatesById(int coordinatesId) {
 		String query = "SELECT longitude, latitude FROM Coordinates WHERE id=?";
 		Connection connection = getNewConnection();
 		try (PreparedStatement ps = connection.prepareStatement(query)) {
 			ps.setInt(1, coordinatesId);
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next()) {
-					return new Coordinates(rs.getString(1), rs.getString(2));
+					return Optional.of(new Coordinates(rs.getString(1), rs.getString(2)));
 				}
 				connection.commit();
-				return null;
+				return Optional.empty();
 			} 
 		}catch (SQLException e) {
 			e.printStackTrace();
-			return null;
+			return Optional.empty();
 		}
 	}
 

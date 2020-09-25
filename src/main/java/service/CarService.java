@@ -75,7 +75,7 @@ public class CarService {
 	}
 
 	public Car getCarByOrderId(int orderId, String userLocale) {
-		return carRepository.getCarByOrderId(orderId, userLocale);
+		return carRepository.getCarByOrderId(orderId, userLocale).orElseThrow(()-> new NullPointerException("No car found for id"));
 	}
 
 	public void setCarStatus(int carid, int status) {
@@ -83,7 +83,7 @@ public class CarService {
 	}
 
 	public String getCategoryByLocale(CarCategory category, String locale) {
-		return carRepository.getCategoryByLocale(category.toString(), locale);
+		return carRepository.getCategoryByLocale(category.toString(), locale).orElseThrow(()->new NullPointerException("No category found for car and locale"));
 	}
 	
 	

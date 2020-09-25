@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Optional;
 
 import application.connection.DBConnectionManager;
 import application.context.annotation.Component;
@@ -21,19 +22,19 @@ public class DriverRepository {
 		return this.connectionManager.getConnection();
 	}
 	
-	public Driver getDriverByCar(Car car) {
+	public Optional<Driver> getDriverByCar(Car car) {
 		String query = "SELECT Drivers.id, Drivers.name, Drivers.surname, Drivers.rating FROM Drivers JOIN Driving ON Driving.driver_id = Drivers.id WHERE Driving.car_id=? AND Driving.dayOfDriving=CURDATE()";
 		Connection connection = getNewConnection();
 		try (PreparedStatement ps = connection.prepareStatement(query)) {
 			ps.setInt(1, car.getId());
 			try(ResultSet rs = ps.executeQuery()){
 				while(rs.next()) {
-					return Driver.builder()
+					return Optional.of(Driver.builder()
 							.id(rs.getInt(1))
 							.name(rs.getString(2))
 							.surname(rs.getString(3))
 							.rating(rs.getFloat(4))
-							.build();
+							.build());
 				}
 			}
 			connection.commit();
@@ -51,23 +52,23 @@ public class DriverRepository {
 				e.printStackTrace();
 			}
 		}
-		return null;
+		return Optional.empty();
 	}
 	
 	
-	public Driver getDriverByOrderId(int id) {
+	public Optional<Driver> getDriverByOrderId(int id) {
 		String query = "SELECT Drivers.id, Drivers.name, Drivers.surname, Drivers.rating FROM Drivers JOIN Driving ON Driving.driver_id=Drivers.id JOIN Orders ON Orders.driving_id = Driving.id WHERE Orders.id=?";
 		Connection connection = getNewConnection();
 		try (PreparedStatement ps = connection.prepareStatement(query)) {
 			ps.setInt(1, id);
 			try(ResultSet rs = ps.executeQuery()){
 				while(rs.next()) {
-					return Driver.builder()
+					return Optional.of(Driver.builder()
 							.id(rs.getInt(1))
 							.name(rs.getString(2))
 							.surname(rs.getString(3))
 							.rating(rs.getFloat(4))
-							.build();
+							.build());
 				}
 			}
 			connection.commit();
@@ -85,7 +86,7 @@ public class DriverRepository {
 				e.printStackTrace();
 			}
 		}
-		return null;
+		return Optional.empty();
 	}
 	
 }

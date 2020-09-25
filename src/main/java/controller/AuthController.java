@@ -22,6 +22,7 @@ import main.java.dto.response.LoginResponse;
 import main.java.dto.response.RefreshTokenResponse;
 import main.java.entity.User;
 import main.java.service.AuthService;
+import main.java.service.HashService;
 import main.java.service.TokenService;
 import main.java.service.UserService;
 
@@ -40,12 +41,16 @@ public class AuthController {
 	@Inject
 	UserService userService;
 
+	@Inject
+	private HashService hashService;
+	
+	
 	@Mapping(route = "/login", requestType = RequestType.POST)
 	public void getLoginRequest(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		String body = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
 		LoginRequest requestObj = gson.fromJson(body, LoginRequest.class);
 		String refreshToken = UUID.randomUUID().toString();
-		User user = User.builder().username(requestObj.username).password(requestObj.password)
+		User user = User.builder().username(requestObj.username).password(hashService.hashStringMD5(requestObj.password))
 				.refreshToken(refreshToken).build();
 		boolean login = authService.login(user);
 		if (!login) {
@@ -73,7 +78,7 @@ public class AuthController {
 		String body = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
 		RegisterRequest requestObj = gson.fromJson(body, RegisterRequest.class);
 		User user = User.builder().name(requestObj.name).username(requestObj.username).surname(requestObj.surname)
-				.password(requestObj.password).build();
+				.password(hashService.hashStringMD5(requestObj.password)).build();
 		boolean created = userService.tryCreateUser(user);
 		if(created) {
 			resp.getWriter().append("Created").flush();

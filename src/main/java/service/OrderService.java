@@ -32,7 +32,7 @@ public class OrderService {
 		List<Order> userPreviousOrders = getAllOrdersByUser(customer.getId(), userLocale);
 		int discount = getLoyaltyDiscount(userPreviousOrders);
 		price -= discount;
-		return orderRepository.tryCreateOrder(route, customer, driver, car, price);
+		return orderRepository.tryCreateOrder(route, customer, driver, car, price).orElseThrow(()-> new NullPointerException("Could not place order"));
 	}
 
 	public int getRouteRawPrice(Route route, Car car) {
@@ -64,7 +64,7 @@ public class OrderService {
 	}
 	
 	public Order getOrderById(int orderid, String userLocale) {
-		return orderRepository.getOrderById(orderid, userLocale);
+		return orderRepository.getOrderById(orderid, userLocale).orElseThrow(()-> new NullPointerException("No order found by id"));
 	}
 	
 	public List<Order> getAllOrders(String userLocale){

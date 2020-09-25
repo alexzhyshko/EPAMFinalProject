@@ -1,13 +1,9 @@
 package main.java.controller;
 
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
@@ -79,52 +75,60 @@ public class OrderController {
 			resp.setStatus(403);
 			return;
 		}
-		String authTokenHeader = req.getHeader("Authorization");
-		String jwt = authTokenHeader.substring(7);
-		User user = userService.getUserByToken(jwt);
-		String body = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
-		RouteCreateRequest requestObj = gson.fromJson(body, RouteCreateRequest.class);
-		Coordinates departure = new Coordinates(requestObj.departureLongitude, requestObj.departureLatitude);
-		Coordinates destination = new Coordinates(requestObj.destinationLongitude, requestObj.destinationLatitude);
-		Route routeCreated = routeService.tryGetRoute(departure, destination);
-		Car car = null;
 		try {
-			car = carService.getNearestCarByPlacesCountAndCategory(requestObj.numberOfPassengers,
-					requestObj.carCategory, userLocale, departure);
-		} catch (Exception e) {
-			e.printStackTrace();
-			if (anyCategory) {
-				try {
-					car = carService.getNearestCarByPlacesCount(requestObj.numberOfPassengers, userLocale, departure);
-				} catch (NoSuitableCarFound noCarFoundExc) {
-					noCarFoundExc.printStackTrace();
-					resp.getWriter().append(noCarFoundExc.getMessage()).flush();
+			String authTokenHeader = req.getHeader("Authorization");
+			String jwt = authTokenHeader.substring(7);
+			User user = userService.getUserByToken(jwt);
+			String body = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+			RouteCreateRequest requestObj = gson.fromJson(body, RouteCreateRequest.class);
+			Coordinates departure = new Coordinates(requestObj.departureLongitude, requestObj.departureLatitude);
+			Coordinates destination = new Coordinates(requestObj.destinationLongitude, requestObj.destinationLatitude);
+			Route routeCreated = routeService.tryGetRoute(departure, destination)
+					.orElseThrow(() -> new NullPointerException("Could not get route"));
+			Car car = null;
+			try {
+				car = carService.getNearestCarByPlacesCountAndCategory(requestObj.numberOfPassengers,
+						requestObj.carCategory, userLocale, departure);
+			} catch (Exception e) {
+				e.printStackTrace();
+				if (anyCategory) {
+					try {
+						car = carService.getNearestCarByPlacesCount(requestObj.numberOfPassengers, userLocale,
+								departure);
+					} catch (NoSuitableCarFound noCarFoundExc) {
+						noCarFoundExc.printStackTrace();
+						resp.getWriter().append(noCarFoundExc.getMessage()).flush();
+						resp.setStatus(404);
+						return;
+					}
+				} else if (anyCountOfCars) {
+					// TODO implement functionality to find a couple of cars to match order
+					resp.getWriter().append("Couldn't find a car to match passengers count").flush();
 					resp.setStatus(404);
 					return;
 				}
-			} else if (anyCountOfCars) {
-				// TODO implement functionality to find a couple of cars to match order
-				resp.getWriter().append("Couldn't find a car to match passengers count").flush();
+			}
+			if (car == null) {
+				resp.getWriter().append("Could not find a suitable car").flush();
 				resp.setStatus(404);
 				return;
 			}
-		}
-		if (car == null) {
-			resp.getWriter().append("Could not find a suitable car").flush();
+			Driver driver = driverService.getDriverByCar(car);
+			Order order = orderService.tryPlaceOrder(routeCreated, user, driver, car, userLocale);
+			Coordinates carDeparture = car.getCoordinates();
+			Coordinates carDestination = departure;
+			Route carArrivalRoute = routeService.tryGetRoute(carDeparture, carDestination)
+					.orElseThrow(() -> new NullPointerException("Could not get route"));
+			carService.setCarStatus(car.getId(), 2);
+			int arrivalTime = carArrivalRoute.time;
+			order.timeToArrival = arrivalTime;
+			resp.setContentType("text/json");
+			resp.getWriter().append(gson.toJson(order)).flush();
+			resp.setStatus(200);
+		} catch (NullPointerException e) {
+			resp.getWriter().append(e.getMessage()).flush();
 			resp.setStatus(404);
-			return;
 		}
-		Driver driver = driverService.getDriverByCar(car);
-		Order order = orderService.tryPlaceOrder(routeCreated, user, driver, car, userLocale);
-		Coordinates carDeparture = car.getCoordinates();
-		Coordinates carDestination = departure;
-		Route carArrivalRoute = routeService.tryGetRoute(carDeparture, carDestination);
-		carService.setCarStatus(car.getId(), 2);
-		int arrivalTime = carArrivalRoute.time;
-		order.timeToArrival = arrivalTime;
-		resp.setContentType("text/json");
-		resp.getWriter().append(gson.toJson(order)).flush();
-		resp.setStatus(200);
 	}
 
 	@Mapping(route = "/order/getRouteDetails", requestType = RequestType.POST)
@@ -133,27 +137,37 @@ public class OrderController {
 		String userLocale = req.getHeader("User_Locale");
 		String body = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
 		RouteCreateRequest requestObj = gson.fromJson(body, RouteCreateRequest.class);
-		Coordinates departure = new Coordinates(requestObj.departureLongitude, requestObj.departureLatitude);
-		Coordinates destination = new Coordinates(requestObj.destinationLongitude, requestObj.destinationLatitude);
-		Route routeCreated = routeService.tryGetRoute(departure, destination);
-		for (CarCategory category : CarCategory.values()) {
-			Car car = null;
-			try {
-				car = carService.getNearestCarByPlacesCountAndCategory(requestObj.numberOfPassengers,
-						category.toString(), userLocale, departure);
-			} catch (NoSuitableCarFound e) {
-				continue;
+		try {
+			Coordinates departure = new Coordinates(requestObj.departureLongitude, requestObj.departureLatitude);
+			Coordinates destination = new Coordinates(requestObj.destinationLongitude, requestObj.destinationLatitude);
+			Route routeCreated = routeService.tryGetRoute(departure, destination)
+					.orElseThrow(() -> new NullPointerException("Could not get route"));
+			for (CarCategory category : CarCategory.values()) {
+				Car car = null;
+				try {
+					car = carService.getNearestCarByPlacesCountAndCategory(requestObj.numberOfPassengers,
+							category.toString(), userLocale, departure);
+				} catch (NoSuitableCarFound e) {
+					continue;
+				}
+
+				if (car != null) {
+					RouteDetails details = new RouteDetails();
+					Coordinates carDeparture = car.getCoordinates();
+					Coordinates carDestination = departure;
+					Route carArrivalRoute = routeService.tryGetRoute(carDeparture, carDestination)
+							.orElseThrow(() -> new NullPointerException("Could not get route"));
+					details.price = orderService.getRouteRawPrice(routeCreated, car);
+					details.arrivalTime = carArrivalRoute.time;
+					details.categoryLocaleName = carService.getCategoryByLocale(category, userLocale);
+					response.add(details);
+				}
+
 			}
-			if (car != null) {
-				RouteDetails details = new RouteDetails();
-				Coordinates carDeparture = car.getCoordinates();
-				Coordinates carDestination = departure;
-				Route carArrivalRoute = routeService.tryGetRoute(carDeparture, carDestination);
-				details.price = orderService.getRouteRawPrice(routeCreated, car);
-				details.arrivalTime = carArrivalRoute.time;
-				details.categoryLocaleName = carService.getCategoryByLocale(category, userLocale);
-				response.add(details);
-			}
+		} catch (NullPointerException e) {
+			resp.getWriter().append(e.getMessage()).flush();
+			resp.setStatus(404);
+			return;
 		}
 		String responseJson = gson.toJson(response);
 		resp.getWriter().append(responseJson).flush();
@@ -183,13 +197,20 @@ public class OrderController {
 			resp.setStatus(403);
 			return;
 		}
-		for (Order order : result.stream().filter(e -> e.statusid == 1).collect(Collectors.toList())) {
-			Car car = order.car;
-			Route route = order.route;
-			Coordinates carPosition = car.getCoordinates();
-			Coordinates clientDeparture = route.departure;
-			Route carArrivalRoute = routeService.tryGetRoute(carPosition, clientDeparture);
-			order.timeToArrival = carArrivalRoute.time;
+		try {
+			for (Order order : result.stream().filter(e -> e.statusid == 1).collect(Collectors.toList())) {
+				Car car = order.car;
+				Route route = order.route;
+				Coordinates carPosition = car.getCoordinates();
+				Coordinates clientDeparture = route.departure;
+				Route carArrivalRoute = routeService.tryGetRoute(carPosition, clientDeparture)
+						.orElseThrow(() -> new NullPointerException("Could not get route"));
+				order.timeToArrival = carArrivalRoute.time;
+			}
+		} catch (NullPointerException e) {
+			resp.getWriter().append(e.getMessage()).flush();
+			resp.setStatus(404);
+			return;
 		}
 		int elementsPerPage = 4;
 		UserOrdersResponse response = new UserOrdersResponse();
@@ -204,7 +225,6 @@ public class OrderController {
 		resp.setStatus(200);
 	}
 
-	
 	@Mapping(route = "/order/get/byId:arg", requestType = RequestType.GET)
 	public void getOrderById(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		String userLocale = req.getHeader("User_Locale");

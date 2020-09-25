@@ -18,7 +18,7 @@ public class UserService {
 	public void updateToken(User user, String newToken) {
 		userRepository.updateTokenByUsername(user.getUsername(), newToken);
 	}
-	
+
 	public void updateRefreshToken(User user, String refreshToken) {
 		userRepository.updateRefreshTokenByUsername(user.getUsername(), refreshToken);
 	}
@@ -41,19 +41,24 @@ public class UserService {
 	}
 
 	public boolean userExistsWithPasswordEquals(User user) {
-		User dbUser = userRepository.getUserByUsernameAndPassword(user.getUsername(), user.getPassword());
-		return !(dbUser == null || !dbUser.getPassword().equals(user.getPassword()));
+		try {
+			User dbUser = userRepository.getUserByUsernameAndPassword(user.getUsername(), user.getPassword())
+					.orElseThrow(() -> new NullPointerException("No user exists with these credentials"));
+			return !(dbUser == null || !dbUser.getPassword().equals(user.getPassword()));
+		} catch (NullPointerException e) {
+			return false;
+		}
 	}
-	
+
 	public User getUserByToken(String token) {
-		return userRepository.getUserByToken(token);
+		return userRepository.getUserByToken(token).orElseThrow(()->new NullPointerException("No user found by token"));
 	}
-	
+
 	public User getUserById(UUID id) {
-		return userRepository.getUserByID(id);
+		return userRepository.getUserByID(id).orElseThrow(()->new NullPointerException("No user found by id"));
 	}
-	
-	public List<User> getAllUsers(){
+
+	public List<User> getAllUsers() {
 		return userRepository.getAllUsers();
 	}
 

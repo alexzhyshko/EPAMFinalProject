@@ -35,10 +35,15 @@ public class UserController {
 			resp.setStatus(403);
 			return;
 		}
-		User user = userService.getUserById(userId);
-		resp.setContentType("text/json");
-		resp.getWriter().append(gson.toJson(user)).flush();
-		resp.setStatus(200);
+		try {
+			User user = userService.getUserById(userId);
+			resp.setContentType("text/json");
+			resp.getWriter().append(gson.toJson(user)).flush();
+			resp.setStatus(200);
+		} catch (NullPointerException e) {
+			resp.getWriter().append(e.getMessage()).flush();
+			resp.setStatus(404);
+		}
 	}
 
 	@Mapping(route = "/user/getByUsername:arg", requestType = RequestType.GET)
@@ -50,7 +55,7 @@ public class UserController {
 			return;
 		}
 		User user = userService.getUserByUsernameOrNull(username);
-		if(user == null) {
+		if (user == null) {
 			resp.getWriter().append("User not found").flush();
 			resp.setStatus(404);
 			return;

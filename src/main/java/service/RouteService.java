@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
@@ -39,7 +40,7 @@ public class RouteService {
 		}
 	}
 
-	public Route tryGetRoute(Coordinates departurePoint, Coordinates destinationPoint) {
+	public Optional<Route> tryGetRoute(Coordinates departurePoint, Coordinates destinationPoint) {
 		String departureLatitude = departurePoint.latitude;
 		String departureLongitude = departurePoint.longitude;
 		String destinationLatitude = destinationPoint.latitude;
@@ -69,11 +70,11 @@ public class RouteService {
 			result.departure = departurePoint;
 			result.destination = destinationPoint;
 			client.close();
-			return result;
+			return Optional.of(result);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return null;
+		return Optional.empty();
 	}
 
 }

@@ -11,7 +11,6 @@ public class AuthService {
 	@Inject
 	private UserService userService;
 
-	
 	public boolean logout(User user) {
 		if(!userService.userExists(user)) {
 			return false;

@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import application.connection.DBConnectionManager;
@@ -43,10 +44,10 @@ public class OrderRepository {
 		return this.connectionManager.getConnection();
 	}
 
-	public Order tryCreateOrder(Route route, User customer, Driver driver, Car car, float price) {
+	public Optional<Order> tryCreateOrder(Route route, User customer, Driver driver, Car car, float price) {
 		Connection connection = getNewConnection();
-		int departureCoordId = coordinateRepository.insertCoordinatesAndReturnId(route.departure);
-		int destinationCoordId = coordinateRepository.insertCoordinatesAndReturnId(route.destination);
+		int departureCoordId = coordinateRepository.insertCoordinatesAndReturnId(route.departure).orElseThrow(NullPointerException::new);
+		int destinationCoordId = coordinateRepository.insertCoordinatesAndReturnId(route.destination).orElseThrow(NullPointerException::new);
 		String query = "INSERT INTO Orders(driving_id, user_id, departure_coordinate_id, destination_coordinate_id, price, distance, timeOccupancy, dateOfOrder, status_id) VALUES((SELECT id FROM Driving WHERE driver_id=? AND car_id=?), ?, ?, ?, ?, ?, ?, NOW(), 1)";
 		try (PreparedStatement ps = connection.prepareStatement(query)) {
 			ps.setInt(1, driver.getId());
@@ -64,10 +65,10 @@ public class OrderRepository {
 				connection.rollback();
 			} catch (SQLException e1) {
 				e1.printStackTrace();
-				return null;
+				return Optional.empty();
 			}
 			e.printStackTrace();
-			return null;
+			return Optional.empty();
 		}
 
 		int orderId = -1;
@@ -84,7 +85,7 @@ public class OrderRepository {
 				connection.rollback();
 			} catch (SQLException e1) {
 				e1.printStackTrace();
-				return null;
+				return Optional.empty();
 			}
 		} finally {
 			try {
@@ -101,7 +102,7 @@ public class OrderRepository {
 		result.price = price;
 		result.customer = customer;
 		result.route = route;
-		return result;
+		return Optional.of(result);
 	}
 
 	public boolean finishOrder(int orderId) {
@@ -171,15 +172,15 @@ public class OrderRepository {
 			order.car = car;
 			Driver driver = driverService.getDriverByOrderId(order.id);
 			order.driver = driver;
-			Coordinates departure = coordinateRepository.getCoordinatesById(departureCoordId);
-			Coordinates destination = coordinateRepository.getCoordinatesById(destinationCoordId);
+			Coordinates departure = coordinateRepository.getCoordinatesById(departureCoordId).orElseThrow(NullPointerException::new);
+			Coordinates destination = coordinateRepository.getCoordinatesById(destinationCoordId).orElseThrow(NullPointerException::new);
 			order.route.departure = departure;
 			order.route.destination = destination;
 		}
 		return result;
 	}
 
-	public Order getOrderById(int orderId, String userLocale) {
+	public Optional<Order> getOrderById(int orderId, String userLocale) {
 		String query = "SELECT id, price, distance, timeOccupancy, dateOfOrder, departure_coordinate_id, destination_coordinate_id, user_id, status_id FROM Orders WHERE id=?";
 		Connection connection = getNewConnection();
 		Order order = new Order();
@@ -206,7 +207,7 @@ public class OrderRepository {
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-			return null;
+			return Optional.empty();
 		}
 		User user = userService.getUserById(userid);
 		order.customer = user;
@@ -214,11 +215,11 @@ public class OrderRepository {
 		order.car = car;
 		Driver driver = driverService.getDriverByCar(car);
 		order.driver = driver;
-		Coordinates departure = coordinateRepository.getCoordinatesById(departureCoordId);
-		Coordinates destination = coordinateRepository.getCoordinatesById(destinationCoordId);
+		Coordinates departure = coordinateRepository.getCoordinatesById(departureCoordId).orElseThrow(NullPointerException::new);
+		Coordinates destination = coordinateRepository.getCoordinatesById(destinationCoordId).orElseThrow(NullPointerException::new);
 		order.route.departure = departure;
 		order.route.destination = destination;
-		return order;
+		return Optional.of(order);
 	}
 
 }
