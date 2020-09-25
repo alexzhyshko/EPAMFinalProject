@@ -89,16 +89,22 @@ public class AuthController {
 		String refreshToken = req.getParameter("refreshToken");
 		String token = req.getParameter("token");
 		if (refreshToken == null) {
+			resp.setContentType("text/plain");
+			resp.getWriter().append("Refresh token = null").flush();
 			resp.setStatus(403);
 			return;
 		}
 		User user = AuthContext.getUserByToken(token);
 		if (user == null) {
+			resp.setContentType("text/plain");
+			resp.getWriter().append("Not authorized").flush();
 			resp.setStatus(403);
 			return;
 		}
 		String refreshTokenOfUser = user.getRefreshToken();
 		if (refreshTokenOfUser == null || !refreshTokenOfUser.equals(refreshToken)) {
+			resp.setContentType("text/plain");
+			resp.getWriter().append("Refresh token of iser null or not equals").flush();
 			resp.setStatus(403);
 			return;
 		}

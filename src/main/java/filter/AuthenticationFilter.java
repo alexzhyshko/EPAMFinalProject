@@ -44,6 +44,7 @@ public class AuthenticationFilter implements Filter {
 		}
 
 		// check if path matches filtration exceptions
+		
 		String path = httpReq.getRequestURI().substring(5);
 		if (DefaultFilterChecks.checkFilterExceptions(path)) {
 			chain.doFilter(httpReq, httpRes);
@@ -60,12 +61,12 @@ public class AuthenticationFilter implements Filter {
 
 		// get JWT from headers and check user authorization
 		String jwt = authTokenHeader.substring(7);
+		
 		if (!AuthContext.isAuthorized(jwt)) {
 			httpRes.setStatus(403);
 			httpRes.getWriter().append("Forbidden").flush();
 			return;
 		}
-
 		boolean tokenValid = false;
 		try {
 			// try to validate token

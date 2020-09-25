@@ -1,9 +1,13 @@
 package main.java.controller;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
@@ -111,7 +115,7 @@ public class OrderController {
 			return;
 		}
 		Driver driver = driverService.getDriverByCar(car);
-		Order order = orderService.tryPlaceOrder(routeCreated, user, driver, car);
+		Order order = orderService.tryPlaceOrder(routeCreated, user, driver, car, userLocale);
 		Coordinates carDeparture = car.getCoordinates();
 		Coordinates carDestination = departure;
 		Route carArrivalRoute = routeService.tryGetRoute(carDeparture, carDestination);
@@ -145,7 +149,7 @@ public class OrderController {
 				Coordinates carDeparture = car.getCoordinates();
 				Coordinates carDestination = departure;
 				Route carArrivalRoute = routeService.tryGetRoute(carDeparture, carDestination);
-				details.price = orderService.getRoutePrice(routeCreated, car);
+				details.price = orderService.getRouteRawPrice(routeCreated, car);
 				details.arrivalTime = carArrivalRoute.time;
 				details.categoryLocaleName = carService.getCategoryByLocale(category, userLocale);
 				response.add(details);
@@ -193,12 +197,14 @@ public class OrderController {
 		if (result.size() % elementsPerPage != 0) {
 			response.numberOfPages++;
 		}
-		response.orders = result.stream().limit(page * elementsPerPage + elementsPerPage).skip(page * elementsPerPage).collect(Collectors.toList());
+		response.orders = result.stream().limit(page * elementsPerPage + elementsPerPage).skip(page * elementsPerPage)
+				.collect(Collectors.toList());
 		resp.setContentType("text/json");
 		resp.getWriter().append(gson.toJson(response)).flush();
 		resp.setStatus(200);
 	}
 
+	
 	@Mapping(route = "/order/get/byId:arg", requestType = RequestType.GET)
 	public void getOrderById(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		String userLocale = req.getHeader("User_Locale");

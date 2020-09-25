@@ -27,10 +27,7 @@ public class AuthContext {
 	public static boolean isAuthorized(String jwt) {
 		User authorizedInstance = null;
 		for(User user : authorizedUsers.values()) {
-			if(user.getToken()==null) {
-				continue;
-			}
-			if(user.getToken().equals(jwt)) {
+			if(user.getToken()==null && user.getToken().equals(jwt)) {
 				authorizedInstance = user;
 			}
 		}
@@ -59,7 +56,16 @@ public class AuthContext {
 	}
 	
 	public static User getUserByToken(String token) {
-		return userService.getUserByToken(token);
+		User result = null;
+		for(User user : authorizedUsers.values()) {
+			if(user.getToken()==null && user.getToken().equals(token)) {
+				result = user;
+			}
+		}
+		if(result==null) {
+			result = userService.getUserByToken(token);
+		}
+		return result;
 	}
 	
 }

@@ -292,7 +292,7 @@ public class UserRepository {
 	
 	
 	public User getUserByToken(String token) {
-		String query = "SELECT `Users`.id, `Users`.username, `Users`.name, `Users`.surname, `Users`.rating, user_roles.name, Tokens.refreshToken FROM `Users` JOIN Tokens ON Tokens.user_id = `Users`.id JOIN user_roles ON `Users`.role_id = user_roles.id WHERE Tokens.token=?";
+		String query = "SELECT `Users`.id, `Users`.username, `Users`.name, `Users`.surname, `Users`.rating, user_roles.name, Tokens.token, Tokens.refreshToken FROM `Users` JOIN Tokens ON Tokens.user_id = `Users`.id JOIN user_roles ON `Users`.role_id = user_roles.id WHERE Tokens.token=?";
 		Connection connection = getNewConnection();
 		try (PreparedStatement ps = connection.prepareStatement(query)) {
 			ps.setString(1, token);
@@ -305,7 +305,8 @@ public class UserRepository {
 							.surname(rs.getString(4))
 							.rating(rs.getFloat(5))
 							.role(Role.valueOf(rs.getString(6)))
-							.refreshToken(rs.getString(7))
+							.token(rs.getString(7))
+							.refreshToken(rs.getString(8))
 							.build();
 				}
 			}

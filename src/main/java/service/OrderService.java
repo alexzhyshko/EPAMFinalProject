@@ -1,8 +1,7 @@
 package main.java.service;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import application.context.annotation.Component;
@@ -23,15 +22,27 @@ public class OrderService {
 	@Inject
 	private UserService userService;
 	
-	private static final int STANDART_FEE_PER_KILOMETER = 20;
+	private static final int STANDART_FEE_PER_KILOMETER = 5;
+	private static final int BASE_RIDE_PRICE = 25;
+	private static final int MINIMAL_RIDE_PRICE = 40;
 	
-	public Order tryPlaceOrder(Route route, User customer, Driver driver, Car car) {
-		int price = this.getRoutePrice(route, car);
+	
+	public Order tryPlaceOrder(Route route, User customer, Driver driver, Car car, String userLocale) {
+		int price = this.getRouteRawPrice(route, car);
+		List<Order> userPreviousOrders = getAllOrdersByUser(customer.getId(), userLocale);
+		int discount = getLoyaltyDiscount(userPreviousOrders);
+		price -= discount;
 		return orderRepository.tryCreateOrder(route, customer, driver, car, price);
 	}
 
-	public int getRoutePrice(Route route, Car car) {
-		return Math.round(route.distance*car.getPriceMultiplier()*STANDART_FEE_PER_KILOMETER);
+	public int getRouteRawPrice(Route route, Car car) {
+		int price = Math.round(route.distance*car.getPriceMultiplier()*STANDART_FEE_PER_KILOMETER)+BASE_RIDE_PRICE;
+		return price<MINIMAL_RIDE_PRICE?MINIMAL_RIDE_PRICE:price; 
+	}
+	
+	public int getLoyaltyDiscount(List<Order> userPreviousOrders) {
+		long totalOrderSum = Math.round(userPreviousOrders.stream().mapToDouble(order->order.price).sum());
+		return Math.round(totalOrderSum*0.01f);
 	}
 	
 	public boolean finishOrder(int orderId) {
@@ -56,12 +67,12 @@ public class OrderService {
 		return orderRepository.getOrderById(orderid, userLocale);
 	}
 	
-	public Map<UUID, List<Order>> getAllOrders(String userLocale){
-		HashMap<UUID, List<Order>> result = new HashMap<>();
+	public List<Order> getAllOrders(String userLocale){
+		List<Order> result = new ArrayList<>();
 		List<User> users = userService.getAllUsers();
 		for(User user : users) {
 			List<Order> userOrders = getAllOrdersByUser(user.getId(), userLocale);
-			result.put(user.getId(), userOrders);
+			result.addAll(userOrders);
 		}
 		return result;
 	}
