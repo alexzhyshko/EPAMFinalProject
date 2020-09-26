@@ -6,6 +6,8 @@ import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.http.HttpStatus;
+
 import com.google.gson.Gson;
 
 import application.context.annotation.Component;
@@ -31,18 +33,18 @@ public class UserController {
 		try {
 			userId = UUID.fromString(req.getParameter("userId"));
 		} catch (Exception e) {
+			resp.setStatus(HttpStatus.SC_FORBIDDEN);
 			resp.getWriter().append("Incorrect userId").flush();
-			resp.setStatus(403);
 			return;
 		}
 		try {
 			User user = userService.getUserById(userId);
 			resp.setContentType("text/json");
+			resp.setStatus(HttpStatus.SC_OK);
 			resp.getWriter().append(gson.toJson(user)).flush();
-			resp.setStatus(200);
 		} catch (NullPointerException e) {
+			resp.setStatus(HttpStatus.SC_NOT_FOUND);
 			resp.getWriter().append(e.getMessage()).flush();
-			resp.setStatus(404);
 		}
 	}
 
@@ -50,19 +52,19 @@ public class UserController {
 	public void getUserByUsername(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		String username = req.getParameter("username");
 		if (username == null) {
+			resp.setStatus(HttpStatus.SC_FORBIDDEN);
 			resp.getWriter().append("Incorrect username").flush();
-			resp.setStatus(403);
 			return;
 		}
 		User user = userService.getUserByUsernameOrNull(username);
 		if (user == null) {
+			resp.setStatus(HttpStatus.SC_NOT_FOUND);
 			resp.getWriter().append("User not found").flush();
-			resp.setStatus(404);
 			return;
 		}
 		resp.setContentType("text/json");
+		resp.setStatus(HttpStatus.SC_OK);
 		resp.getWriter().append(gson.toJson(user)).flush();
-		resp.setStatus(200);
 	}
 
 }

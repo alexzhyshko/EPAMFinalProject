@@ -1,6 +1,5 @@
 package main.java.service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,7 +28,7 @@ public class OrderService {
 	
 	public Order tryPlaceOrder(Route route, User customer, Driver driver, Car car, String userLocale) {
 		int price = this.getRouteRawPrice(route, car);
-		List<Order> userPreviousOrders = getAllOrdersByUser(customer.getId(), userLocale);
+		List<Order> userPreviousOrders = getAllOrdersByUser(customer.getId(), userLocale, 0, Integer.MAX_VALUE);
 		int discount = getLoyaltyDiscount(userPreviousOrders);
 		price -= discount;
 		return orderRepository.tryCreateOrder(route, customer, driver, car, price).orElseThrow(()-> new NullPointerException("Could not place order"));
@@ -49,32 +48,47 @@ public class OrderService {
 		return orderRepository.finishOrder(orderId);
 	}
 	
-	public List<Order> getAllOrdersByUser(UUID userid, String userLocale){
-		List<Order> result = orderRepository.getAllOrdersByStatusAndUser(userid, 1, userLocale);
-		result.addAll(orderRepository.getAllOrdersByStatusAndUser(userid, 2, userLocale));
+	public List<Order> getAllOrdersByUser(UUID userid, String userLocale, int skip, int limit){
+		List<Order> result = orderRepository.getAllOrdersByStatusAndUser(userid, 1, skip, limit, userLocale);
+		result.addAll(orderRepository.getAllOrdersByStatusAndUser(userid, 2, skip, limit, userLocale));
 		return result;
 	}
 	
-	public List<Order> getFinishedOrdersByUser(UUID userid, String userLocale){
-		return orderRepository.getAllOrdersByStatusAndUser(userid, 2, userLocale);
+	public List<Order> getFinishedOrdersByUser(UUID userid, String userLocale, int skip, int limit){
+		return orderRepository.getAllOrdersByStatusAndUser(userid, 2, skip, limit, userLocale);
 	}
 	
-	public List<Order> getActiveOrdersByUser(UUID userid, String userLocale){
-		return orderRepository.getAllOrdersByStatusAndUser(userid, 1, userLocale);
+	public List<Order> getActiveOrdersByUser(UUID userid, String userLocale, int skip, int limit){
+		return orderRepository.getAllOrdersByStatusAndUser(userid, 1, skip, limit, userLocale);
 	}
 	
 	public Order getOrderById(int orderid, String userLocale) {
 		return orderRepository.getOrderById(orderid, userLocale).orElseThrow(()-> new NullPointerException("No order found by id"));
 	}
 	
-	public List<Order> getAllOrders(String userLocale){
-		List<Order> result = new ArrayList<>();
-		List<User> users = userService.getAllUsers();
-		for(User user : users) {
-			List<Order> userOrders = getAllOrdersByUser(user.getId(), userLocale);
-			result.addAll(userOrders);
-		}
-		return result;
+	public List<Order> getAllOrdersFiltered(String userLocale, String filterBy, String value, int skip, int limit){
+		return orderRepository.getAllOrders(userLocale, filterBy, value, skip, limit, true);
+	}
+	
+	public List<Order> getAllOrders(String userLocale, int skip, int limit){
+		return orderRepository.getAllOrders(userLocale, "", "", skip, limit, false);
+	}
+	
+	
+	public int getTotalOrderCountByUser(UUID userid) {
+		return getFinishedOrderCountByUser(userid)+getActiveOrderCountByUser(userid);
+	}
+	
+	public int getActiveOrderCountByUser(UUID userid) {
+		return this.orderRepository.getOrderCountByUserAndStatus(userid, 1).orElseThrow(()->new NullPointerException("Could not get active order count by user"));
+	}
+	
+	public int getFinishedOrderCountByUser(UUID userid) {
+		return this.orderRepository.getOrderCountByUserAndStatus(userid, 2).orElseThrow(()->new NullPointerException("Could not get finished order count by user"));
+	}
+	
+	public int getTotalOrderCount(String filterBy, String value) {
+		return this.orderRepository.getTotalOrderCountFiltered(filterBy, value).orElseThrow(()->new NullPointerException("Could not get total order count"));
 	}
 	
 }

@@ -6,6 +6,8 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.http.HttpStatus;
+
 import com.google.gson.Gson;
 
 import application.context.annotation.Component;
@@ -30,8 +32,8 @@ public class CarController {
 		String userLocale = req.getHeader("User_Locale");
 		List<Car> allCars = carService.getAllAvailableCars(userLocale);
 		resp.setContentType("text/json");
+		resp.setStatus(HttpStatus.SC_OK);
 		resp.getWriter().append(gson.toJson(allCars)).flush();
-		resp.setStatus(200);
 	}
 	
 }

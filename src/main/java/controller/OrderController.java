@@ -63,16 +63,16 @@ public class OrderController {
 		try {
 			anyCategory = Boolean.valueOf(req.getParameter("anyCategory"));
 		} catch (Exception e) {
+			resp.setStatus(HttpStatus.SC_FORBIDDEN);
 			resp.getWriter().append("Incorrect parameter anyCategory").flush();
-			resp.setStatus(403);
 			return;
 		}
 		boolean anyCountOfCars = false;
 		try {
 			anyCountOfCars = Boolean.valueOf(req.getParameter("anyCountOfCars"));
 		} catch (Exception e) {
+			resp.setStatus(HttpStatus.SC_FORBIDDEN);
 			resp.getWriter().append("Incorrect parameter anyCountOfCars").flush();
-			resp.setStatus(403);
 			return;
 		}
 		try {
@@ -96,21 +96,22 @@ public class OrderController {
 						car = carService.getNearestCarByPlacesCount(requestObj.numberOfPassengers, userLocale,
 								departure);
 					} catch (NoSuitableCarFound noCarFoundExc) {
+						System.out.println("adadadad");
 						noCarFoundExc.printStackTrace();
+						resp.setStatus(HttpStatus.SC_NOT_FOUND);
 						resp.getWriter().append(noCarFoundExc.getMessage()).flush();
-						resp.setStatus(404);
 						return;
 					}
 				} else if (anyCountOfCars) {
 					// TODO implement functionality to find a couple of cars to match order
-					resp.getWriter().append("Couldn't find a car to match passengers count").flush();
-					resp.setStatus(404);
+					resp.setStatus(HttpStatus.SC_NOT_FOUND);
+					resp.getWriter().append("Couldn't find a car to match passengers count, Try ordering a couple of cars with lower passenger count").flush();
 					return;
 				}
 			}
 			if (car == null) {
-				resp.getWriter().append("Could not find a suitable car").flush();
-				resp.setStatus(404);
+				resp.setStatus(HttpStatus.SC_NOT_FOUND);
+				resp.getWriter().append("Could not find a suitable car. Please, try againg later").flush();
 				return;
 			}
 			Driver driver = driverService.getDriverByCar(car);
@@ -122,12 +123,12 @@ public class OrderController {
 			carService.setCarStatus(car.getId(), 2);
 			int arrivalTime = carArrivalRoute.time;
 			order.timeToArrival = arrivalTime;
-			resp.setContentType("text/json");
+			resp.setContentType("application/json");
+			resp.setStatus(HttpStatus.SC_OK);
 			resp.getWriter().append(gson.toJson(order)).flush();
-			resp.setStatus(200);
 		} catch (NullPointerException e) {
+			resp.setStatus(HttpStatus.SC_NOT_FOUND);
 			resp.getWriter().append(e.getMessage()).flush();
-			resp.setStatus(404);
 		}
 	}
 
@@ -165,13 +166,21 @@ public class OrderController {
 
 			}
 		} catch (NullPointerException e) {
+			
+			resp.setStatus(HttpStatus.SC_NOT_FOUND);
 			resp.getWriter().append(e.getMessage()).flush();
-			resp.setStatus(404);
 			return;
 		}
+		if(response.isEmpty()) {
+			resp.setContentType("text/plain");
+			resp.setStatus(HttpStatus.SC_NOT_FOUND);
+			resp.getWriter().append("No cars found with specified passenger count. Please try ordering cars with less/more passengers");
+			return;
+		}
+		resp.setContentType("application/json");
 		String responseJson = gson.toJson(response);
+		resp.setStatus(HttpStatus.SC_OK);
 		resp.getWriter().append(responseJson).flush();
-		resp.setStatus(200);
 	}
 
 	@Mapping(route = "/order/get/byUserId:arg:arg:arg", requestType = RequestType.GET)
@@ -185,16 +194,22 @@ public class OrderController {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		int elementsPerPage = 4;
+		int totalNumberOfOrders = -1;
 		List<Order> result = null;
 		if ("all".equals(type)) {
-			result = orderService.getAllOrdersByUser(userid, userLocale);
+			result = orderService.getAllOrdersByUser(userid, userLocale, page * elementsPerPage , page * elementsPerPage + elementsPerPage);
+			totalNumberOfOrders = orderService.getTotalOrderCountByUser(userid);
 		} else if ("finished".equals(type)) {
-			result = orderService.getFinishedOrdersByUser(userid, userLocale);
+			result = orderService.getFinishedOrdersByUser(userid, userLocale, page * elementsPerPage , page * elementsPerPage + elementsPerPage);
+			totalNumberOfOrders = orderService.getFinishedOrderCountByUser(userid);
 		} else if ("active".equals(type)) {
-			result = orderService.getActiveOrdersByUser(userid, userLocale);
+			result = orderService.getActiveOrdersByUser(userid, userLocale, page * elementsPerPage , page * elementsPerPage + elementsPerPage);
+			totalNumberOfOrders = orderService.getActiveOrderCountByUser(userid);
 		} else {
+			resp.setContentType("text/plain");
+			resp.setStatus(HttpStatus.SC_FORBIDDEN);
 			resp.getWriter().append("Incorrect path variable " + type).flush();
-			resp.setStatus(403);
 			return;
 		}
 		try {
@@ -208,21 +223,20 @@ public class OrderController {
 				order.timeToArrival = carArrivalRoute.time;
 			}
 		} catch (NullPointerException e) {
+			resp.setContentType("text/plain");
+			resp.setStatus(HttpStatus.SC_NOT_FOUND);
 			resp.getWriter().append(e.getMessage()).flush();
-			resp.setStatus(404);
 			return;
 		}
-		int elementsPerPage = 4;
 		UserOrdersResponse response = new UserOrdersResponse();
-		response.numberOfPages = result.size() / elementsPerPage;
-		if (result.size() % elementsPerPage != 0) {
+		response.numberOfPages = totalNumberOfOrders / elementsPerPage;
+		if (totalNumberOfOrders % elementsPerPage != 0) {
 			response.numberOfPages++;
 		}
-		response.orders = result.stream().limit(page * elementsPerPage + elementsPerPage).skip(page * elementsPerPage)
-				.collect(Collectors.toList());
-		resp.setContentType("text/json");
+		response.orders = result;
+		resp.setContentType("application/json");
+		resp.setStatus(HttpStatus.SC_OK);
 		resp.getWriter().append(gson.toJson(response)).flush();
-		resp.setStatus(200);
 	}
 
 	@Mapping(route = "/order/get/byId:arg", requestType = RequestType.GET)
@@ -232,13 +246,14 @@ public class OrderController {
 		try {
 			orderId = Integer.parseInt(req.getParameter("orderId"));
 		} catch (NumberFormatException | NullPointerException e) {
+			resp.setContentType("text/plain");
 			resp.getWriter().append("Incorrect orderId").flush();
-			resp.setStatus(403);
+			resp.setStatus(HttpStatus.SC_FORBIDDEN);
 			return;
 		}
-		resp.setContentType("text/json");
+		resp.setContentType("application/json");
+		resp.setStatus(HttpStatus.SC_OK);
 		resp.getWriter().append(gson.toJson(orderService.getOrderById(orderId, userLocale))).flush();
-		resp.setStatus(403);
 	}
 
 	@Mapping(route = "/order/finish:arg", requestType = RequestType.GET)
@@ -248,20 +263,23 @@ public class OrderController {
 		try {
 			orderId = Integer.parseInt(req.getParameter("orderId"));
 		} catch (NumberFormatException | NullPointerException e) {
+			resp.setContentType("text/plain");
 			resp.getWriter().append("Incorrect orderId").flush();
-			resp.setStatus(403);
+			resp.setStatus(HttpStatus.SC_FORBIDDEN);
 			return;
 		}
 		boolean success = orderService.finishOrder(orderId);
 		Car car = carService.getCarByOrderId(orderId, userLocale);
 		if (success) {
 			carService.setCarStatus(car.getId(), 1);
-			resp.getWriter().append("OK").flush();
+			resp.setContentType("text/plain");
 			resp.setStatus(HttpStatus.SC_OK);
+			resp.getWriter().append("Order finished").flush();
 			return;
 		}
+		resp.setContentType("text/plain");
+		resp.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 		resp.getWriter().append("Error finishing your order").flush();
-		resp.setStatus(500);
 	}
 
 }

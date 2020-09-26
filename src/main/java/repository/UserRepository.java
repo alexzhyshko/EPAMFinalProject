@@ -213,7 +213,10 @@ public class UserRepository {
 	
 	
 	public Optional<User> getUserByID(UUID id) {
-		String query = "SELECT `Users`.id, `Users`.username, `Users`.name, `Users`.surname, `Users`.rating, `Users`.password, user_roles.name FROM `Users` JOIN user_roles ON `Users`.role_id = user_roles.id WHERE `Users`.id=?";
+		String query = "SELECT `Users`.id, `Users`.username, `Users`.name, `Users`.surname, `Users`.rating, `Users`.password, user_roles.name "
+				+ "FROM `Users` "
+				+ "JOIN user_roles ON `Users`.role_id = user_roles.id "
+				+ "WHERE `Users`.id=?";
 		Connection connection = getNewConnection();
 		try (PreparedStatement ps = connection.prepareStatement(query)) {
 			ps.setString(1, id.toString());

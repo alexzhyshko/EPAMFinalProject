@@ -7,6 +7,8 @@ import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.http.HttpStatus;
+
 import com.google.gson.Gson;
 
 import application.context.annotation.Component;
@@ -54,7 +56,7 @@ public class AuthController {
 				.refreshToken(refreshToken).build();
 		boolean login = authService.login(user);
 		if (!login) {
-			resp.setStatus(404);
+			resp.setStatus(HttpStatus.SC_NOT_FOUND);
 			resp.getWriter().append("Incorrect username or password").flush();
 			return;
 		}
@@ -70,7 +72,7 @@ public class AuthController {
 		AuthContext.authorize(user);
 		resp.setContentType("text/json");
 		resp.getWriter().append(jsonResponse).flush();
-		resp.setStatus(200);
+		resp.setStatus(HttpStatus.SC_OK);
 	}
 
 	@Mapping(route = "/register", requestType = RequestType.POST)
@@ -81,12 +83,12 @@ public class AuthController {
 				.password(hashService.hashStringMD5(requestObj.password)).build();
 		boolean created = userService.tryCreateUser(user);
 		if(created) {
-			resp.getWriter().append("Created").flush();
-			resp.setStatus(201);
+			resp.setStatus(HttpStatus.SC_CREATED);
+			resp.getWriter().append("Registration successful").flush();
 			return;
 		}
-		resp.getWriter().append("Conflict").flush();
-		resp.setStatus(409);
+		resp.setStatus(HttpStatus.SC_CONFLICT);
+		resp.getWriter().append("User with this username already exists").flush();
 	}
 
 	@Mapping(route = "/refreshToken:arg:arg", requestType = RequestType.GET)
@@ -95,22 +97,22 @@ public class AuthController {
 		String token = req.getParameter("token");
 		if (refreshToken == null) {
 			resp.setContentType("text/plain");
+			resp.setStatus(HttpStatus.SC_FORBIDDEN);
 			resp.getWriter().append("Refresh token = null").flush();
-			resp.setStatus(403);
 			return;
 		}
 		User user = AuthContext.getUserByToken(token);
 		if (user == null) {
 			resp.setContentType("text/plain");
+			resp.setStatus(HttpStatus.SC_FORBIDDEN);
 			resp.getWriter().append("Not authorized").flush();
-			resp.setStatus(403);
 			return;
 		}
 		String refreshTokenOfUser = user.getRefreshToken();
 		if (refreshTokenOfUser == null || !refreshTokenOfUser.equals(refreshToken)) {
 			resp.setContentType("text/plain");
-			resp.getWriter().append("Refresh token of iser null or not equals").flush();
-			resp.setStatus(403);
+			resp.setStatus(HttpStatus.SC_FORBIDDEN);
+			resp.getWriter().append("Refresh token of user null or not equals").flush();
 			return;
 		}
 		String newToken = tokenService.generateJwt(user);
@@ -121,8 +123,8 @@ public class AuthController {
 		response.token = newToken;
 		String jsonResponse = gson.toJson(response);
 		resp.setContentType("text/json");
+		resp.setStatus(HttpStatus.SC_OK);
 		resp.getWriter().append(jsonResponse).flush();
-		resp.setStatus(200);
 	}
 	
 	@Mapping(route = "/logout", requestType = RequestType.POST)
@@ -137,8 +139,8 @@ public class AuthController {
 		}
 		AuthContext.deauthorize(user);
 		userService.deleteToken(token);
+		resp.setStatus(HttpStatus.SC_OK);
 		resp.getWriter().append("OK").flush();
-		resp.setStatus(200);
 	}
 
 }
