@@ -31,11 +31,11 @@ public class ApplicationContext {
 		System.out.println("Destroyed");
 	}
 
-	public static HashMap<Class, Object> getSingletonComponents() {
+	public static Map<Class, Object> getSingletonComponents() {
 		return singletonComponents;
 	}
 
-	public static HashMap<Class, Object> getPrototypeComponents() {
+	public static Map<Class, Object> getPrototypeComponents() {
 		return prototypeComponents;
 	}
 

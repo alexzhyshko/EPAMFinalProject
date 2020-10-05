@@ -1,6 +1,17 @@
 package main.java.dto.request;
 
 public class LogoutRequest {
-	public String token;
-	public String refreshToken;
+	private String token;
+	private String refreshToken;
+	
+	
+	public String getToken() {
+		return token;
+	}
+	public String getRefreshToken() {
+		return refreshToken;
+	}
+	
+	
+	
 }

@@ -2,8 +2,8 @@ package application.configurators;
 
 import application.routing.Router;
 
-public abstract class RouterConfiguratorAdapter extends ConfiguratorAdapter{
+public interface RouterConfiguratorAdapter extends ConfiguratorAdapter{
 
-	public static void configure(Router router) {}
+	public void configure(Router router);
 	
 }

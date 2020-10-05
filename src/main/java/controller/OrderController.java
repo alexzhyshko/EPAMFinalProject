@@ -31,6 +31,7 @@ import main.java.entity.User;
 import main.java.exception.NoSuitableCarFound;
 import main.java.service.CarService;
 import main.java.service.DriverService;
+import main.java.service.LocalizationService;
 import main.java.service.OrderService;
 import main.java.service.RouteService;
 import main.java.service.UserService;
@@ -56,6 +57,9 @@ public class OrderController {
 	@Inject
 	private DriverService driverService;
 
+	@Inject
+	private LocalizationService localizator;
+	
 	@Mapping(route = "/order/create:arg:arg", requestType = RequestType.POST)
 	public void onOrderCreateRequestReceived(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		String userLocale = req.getHeader("User_Locale");
@@ -64,7 +68,7 @@ public class OrderController {
 			anyCategory = Boolean.valueOf(req.getParameter("anyCategory"));
 		} catch (Exception e) {
 			resp.setStatus(HttpStatus.SC_FORBIDDEN);
-			resp.getWriter().append("Incorrect parameter anyCategory").flush();
+			resp.getWriter().append(localizator.getPropertyByLocale(userLocale, "incorrectParameter")).flush();
 			return;
 		}
 		boolean anyCountOfCars = false;
@@ -72,7 +76,7 @@ public class OrderController {
 			anyCountOfCars = Boolean.valueOf(req.getParameter("anyCountOfCars"));
 		} catch (Exception e) {
 			resp.setStatus(HttpStatus.SC_FORBIDDEN);
-			resp.getWriter().append("Incorrect parameter anyCountOfCars").flush();
+			resp.getWriter().append(localizator.getPropertyByLocale(userLocale, "incorrectParameter")).flush();
 			return;
 		}
 		try {
@@ -81,22 +85,21 @@ public class OrderController {
 			User user = userService.getUserByToken(jwt);
 			String body = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
 			RouteCreateRequest requestObj = gson.fromJson(body, RouteCreateRequest.class);
-			Coordinates departure = new Coordinates(requestObj.departureLongitude, requestObj.departureLatitude);
-			Coordinates destination = new Coordinates(requestObj.destinationLongitude, requestObj.destinationLatitude);
+			Coordinates departure = new Coordinates(requestObj.getDepartureLongitude(), requestObj.getDepartureLatitude());
+			Coordinates destination = new Coordinates(requestObj.getDestinationLongitude(), requestObj.getDestinationLatitude());
 			Route routeCreated = routeService.tryGetRoute(departure, destination)
-					.orElseThrow(() -> new NullPointerException("Could not get route"));
+					.orElseThrow(() -> new NullPointerException(localizator.getPropertyByLocale(userLocale, "couldNotGetRoute")));
 			Car car = null;
 			try {
-				car = carService.getNearestCarByPlacesCountAndCategory(requestObj.numberOfPassengers,
-						requestObj.carCategory, userLocale, departure);
+				car = carService.getNearestCarByPlacesCountAndCategory(requestObj.getNumberOfPassengers(),
+						requestObj.getCarCategory(), userLocale, departure);
 			} catch (Exception e) {
 				e.printStackTrace();
 				if (anyCategory) {
 					try {
-						car = carService.getNearestCarByPlacesCount(requestObj.numberOfPassengers, userLocale,
+						car = carService.getNearestCarByPlacesCount(requestObj.getNumberOfPassengers(), userLocale,
 								departure);
 					} catch (NoSuitableCarFound noCarFoundExc) {
-						System.out.println("adadadad");
 						noCarFoundExc.printStackTrace();
 						resp.setStatus(HttpStatus.SC_NOT_FOUND);
 						resp.getWriter().append(noCarFoundExc.getMessage()).flush();
@@ -105,13 +108,13 @@ public class OrderController {
 				} else if (anyCountOfCars) {
 					// TODO implement functionality to find a couple of cars to match order
 					resp.setStatus(HttpStatus.SC_NOT_FOUND);
-					resp.getWriter().append("Couldn't find a car to match passengers count, Try ordering a couple of cars with lower passenger count").flush();
+					resp.getWriter().append(localizator.getPropertyByLocale(userLocale, "couldNotFindMatchCarByPlacesAndCategory")).flush();
 					return;
 				}
 			}
 			if (car == null) {
 				resp.setStatus(HttpStatus.SC_NOT_FOUND);
-				resp.getWriter().append("Could not find a suitable car. Please, try againg later").flush();
+				resp.getWriter().append(localizator.getPropertyByLocale(userLocale, "couldNotFindSuitableCar")).flush();
 				return;
 			}
 			Driver driver = driverService.getDriverByCar(car);
@@ -119,10 +122,10 @@ public class OrderController {
 			Coordinates carDeparture = car.getCoordinates();
 			Coordinates carDestination = departure;
 			Route carArrivalRoute = routeService.tryGetRoute(carDeparture, carDestination)
-					.orElseThrow(() -> new NullPointerException("Could not get route"));
+					.orElseThrow(() -> new NullPointerException(localizator.getPropertyByLocale(userLocale, "couldNotGetRoute")));
 			carService.setCarStatus(car.getId(), 2);
 			int arrivalTime = carArrivalRoute.time;
-			order.timeToArrival = arrivalTime;
+			order.setTimeToArrival(arrivalTime);
 			resp.setContentType("application/json");
 			resp.setStatus(HttpStatus.SC_OK);
 			resp.getWriter().append(gson.toJson(order)).flush();
@@ -139,28 +142,30 @@ public class OrderController {
 		String body = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
 		RouteCreateRequest requestObj = gson.fromJson(body, RouteCreateRequest.class);
 		try {
-			Coordinates departure = new Coordinates(requestObj.departureLongitude, requestObj.departureLatitude);
-			Coordinates destination = new Coordinates(requestObj.destinationLongitude, requestObj.destinationLatitude);
+			Coordinates departure = new Coordinates(requestObj.getDepartureLongitude(), requestObj.getDepartureLatitude());
+			Coordinates destination = new Coordinates(requestObj.getDestinationLongitude(), requestObj.getDestinationLatitude());
 			Route routeCreated = routeService.tryGetRoute(departure, destination)
-					.orElseThrow(() -> new NullPointerException("Could not get route"));
+					.orElseThrow(() -> new NullPointerException(localizator.getPropertyByLocale(userLocale, "couldNotGetRoute")));
 			for (CarCategory category : CarCategory.values()) {
 				Car car = null;
 				try {
-					car = carService.getNearestCarByPlacesCountAndCategory(requestObj.numberOfPassengers,
+					car = carService.getNearestCarByPlacesCountAndCategory(requestObj.getNumberOfPassengers(),
 							category.toString(), userLocale, departure);
 				} catch (NoSuitableCarFound e) {
 					continue;
 				}
 
 				if (car != null) {
-					RouteDetails details = new RouteDetails();
+					
 					Coordinates carDeparture = car.getCoordinates();
 					Coordinates carDestination = departure;
 					Route carArrivalRoute = routeService.tryGetRoute(carDeparture, carDestination)
-							.orElseThrow(() -> new NullPointerException("Could not get route"));
-					details.price = orderService.getRouteRawPrice(routeCreated, car);
-					details.arrivalTime = carArrivalRoute.time;
-					details.categoryLocaleName = carService.getCategoryByLocale(category, userLocale);
+							.orElseThrow(() -> new NullPointerException(localizator.getPropertyByLocale(userLocale, "couldNotGetRoute")));
+					RouteDetails details = RouteDetails.builder()
+							.price(orderService.getRouteRawPrice(routeCreated, car))
+							.arrivalTime(carArrivalRoute.time)
+							.categoryLocaleName(carService.getCategoryByLocale(category, userLocale))
+							.build();
 					response.add(details);
 				}
 
@@ -174,7 +179,8 @@ public class OrderController {
 		if(response.isEmpty()) {
 			resp.setContentType("text/plain");
 			resp.setStatus(HttpStatus.SC_NOT_FOUND);
-			resp.getWriter().append("No cars found with specified passenger count. Please try ordering cars with less/more passengers");
+			System.out.println(localizator.getPropertyByLocale(userLocale, "couldNotFindMatchCarByPlaces"));
+			resp.getWriter().append(localizator.getPropertyByLocale(userLocale, "couldNotFindMatchCarByPlaces"));
 			return;
 		}
 		resp.setContentType("application/json");
@@ -209,18 +215,18 @@ public class OrderController {
 		} else {
 			resp.setContentType("text/plain");
 			resp.setStatus(HttpStatus.SC_FORBIDDEN);
-			resp.getWriter().append("Incorrect path variable " + type).flush();
+			resp.getWriter().append(localizator.getPropertyByLocale(userLocale, "incorrectPathVariable")).flush();
 			return;
 		}
 		try {
-			for (Order order : result.stream().filter(e -> e.statusid == 1).collect(Collectors.toList())) {
-				Car car = order.car;
-				Route route = order.route;
+			for (Order order : result.stream().filter(e -> e.getStatusid() == 1).collect(Collectors.toList())) {
+				Car car = order.getCar();
+				Route route = order.getRoute();
 				Coordinates carPosition = car.getCoordinates();
 				Coordinates clientDeparture = route.departure;
 				Route carArrivalRoute = routeService.tryGetRoute(carPosition, clientDeparture)
-						.orElseThrow(() -> new NullPointerException("Could not get route"));
-				order.timeToArrival = carArrivalRoute.time;
+						.orElseThrow(() -> new NullPointerException(localizator.getPropertyByLocale(userLocale, "couldNotGetRoute")));
+				order.setTimeToArrival(carArrivalRoute.time);
 			}
 		} catch (NullPointerException e) {
 			resp.setContentType("text/plain");
@@ -228,12 +234,15 @@ public class OrderController {
 			resp.getWriter().append(e.getMessage()).flush();
 			return;
 		}
-		UserOrdersResponse response = new UserOrdersResponse();
-		response.numberOfPages = totalNumberOfOrders / elementsPerPage;
+		
+		int numberOfPages = totalNumberOfOrders / elementsPerPage;
 		if (totalNumberOfOrders % elementsPerPage != 0) {
-			response.numberOfPages++;
+			numberOfPages++;
 		}
-		response.orders = result;
+		UserOrdersResponse response = UserOrdersResponse.builder()
+				.numberOfPages(numberOfPages)
+				.orders(result)
+				.build();
 		resp.setContentType("application/json");
 		resp.setStatus(HttpStatus.SC_OK);
 		resp.getWriter().append(gson.toJson(response)).flush();
@@ -247,7 +256,7 @@ public class OrderController {
 			orderId = Integer.parseInt(req.getParameter("orderId"));
 		} catch (NumberFormatException | NullPointerException e) {
 			resp.setContentType("text/plain");
-			resp.getWriter().append("Incorrect orderId").flush();
+			resp.getWriter().append(localizator.getPropertyByLocale(userLocale, "incorrectOrderId")).flush();
 			resp.setStatus(HttpStatus.SC_FORBIDDEN);
 			return;
 		}
@@ -264,7 +273,7 @@ public class OrderController {
 			orderId = Integer.parseInt(req.getParameter("orderId"));
 		} catch (NumberFormatException | NullPointerException e) {
 			resp.setContentType("text/plain");
-			resp.getWriter().append("Incorrect orderId").flush();
+			resp.getWriter().append(localizator.getPropertyByLocale(userLocale, "incorrectOrderId")).flush();
 			resp.setStatus(HttpStatus.SC_FORBIDDEN);
 			return;
 		}
@@ -274,12 +283,12 @@ public class OrderController {
 			carService.setCarStatus(car.getId(), 1);
 			resp.setContentType("text/plain");
 			resp.setStatus(HttpStatus.SC_OK);
-			resp.getWriter().append("Order finished").flush();
+			resp.getWriter().append(localizator.getPropertyByLocale(userLocale, "orderFinished")).flush();
 			return;
 		}
 		resp.setContentType("text/plain");
 		resp.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
-		resp.getWriter().append("Error finishing your order").flush();
+		resp.getWriter().append(localizator.getPropertyByLocale(userLocale, "errorFinishingOrder")).flush();
 	}
 
 }

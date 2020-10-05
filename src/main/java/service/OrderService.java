@@ -40,7 +40,7 @@ public class OrderService {
 	}
 	
 	public int getLoyaltyDiscount(List<Order> userPreviousOrders) {
-		long totalOrderSum = Math.round(userPreviousOrders.stream().mapToDouble(order->order.price).sum());
+		long totalOrderSum = Math.round(userPreviousOrders.stream().mapToDouble(Order::getPrice).sum());
 		return Math.round(totalOrderSum*0.01f);
 	}
 	

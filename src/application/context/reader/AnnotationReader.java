@@ -21,10 +21,9 @@ public class AnnotationReader {
 				if (hasComponentAnnotation(temp)) {
 					if (!hasPrototypeAnnotation(temp)) {
 						ApplicationContext.putIntoSingletonContext(getInstanceOfClass(temp));
-					}
-					else
+					} else
 						ApplicationContext.putIntoPrototypeContext(getInstanceOfClass(temp));
-					if(hasRestControllerAnnotation(temp)) {
+					if (hasRestControllerAnnotation(temp)) {
 						RestContext.addRest(temp);
 					}
 				} else if (hasConfigurationAnnotation(temp))
@@ -41,7 +40,6 @@ public class AnnotationReader {
 		return clazz.getDeclaredAnnotation(RestController.class) != null;
 	}
 
-	
 	protected static boolean hasComponentAnnotation(Class clazz) {
 		return clazz.getDeclaredAnnotation(Component.class) != null;
 	}
@@ -54,9 +52,8 @@ public class AnnotationReader {
 		return clazz.getDeclaredAnnotation(Prototype.class) != null;
 	}
 
-	
-	protected static Object getInstanceOfClass(Class clazz) throws InstantiationException, IllegalAccessException,
-			IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+	protected static Object getInstanceOfClass(Class clazz)
+			throws InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
 		return clazz.getDeclaredConstructor().newInstance();
 	}
 

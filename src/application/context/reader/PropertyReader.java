@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Properties;
 
 import application.context.annotation.Component;
-import application.context.scanner.Scanner;
 
 @Component
 public class PropertyReader {
@@ -15,7 +14,7 @@ public class PropertyReader {
 	public PropertyReader() {
 		this.properties = new Properties();
 		try {
-			this.properties.load(Scanner.class.getClassLoader().getResourceAsStream(propertyName));
+			this.properties.load(PropertyReader.class.getClassLoader().getResourceAsStream(propertyName));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

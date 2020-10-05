@@ -28,9 +28,9 @@ public class CarService {
 		double minDistance = Double.MAX_VALUE;
 		for (Car car : allSuitableCars) {
 			// calculate distance between client and car
-			double distance = distanceInKmBetweenEarthCoordinates(Double.parseDouble(car.getCoordinates().latitude),
-					Double.parseDouble(car.getCoordinates().longitude), Double.parseDouble(clientCoord.latitude),
-					Double.parseDouble(clientCoord.longitude));
+			double distance = distanceInKmBetweenEarthCoordinates(Double.parseDouble(car.getCoordinates().getLatitude()),
+					Double.parseDouble(car.getCoordinates().getLongitude()), Double.parseDouble(clientCoord.getLatitude()),
+					Double.parseDouble(clientCoord.getLongitude()));
 			if (distance < minDistance) {
 				minDistance = distance;
 				result = car;
@@ -55,9 +55,9 @@ public class CarService {
 		double minDistance = Double.MAX_VALUE;
 		for (Car car : allSuitableCars) {
 			// calculate distance between client and car
-			double distance = distanceInKmBetweenEarthCoordinates(Double.parseDouble(car.getCoordinates().latitude),
-					Double.parseDouble(car.getCoordinates().longitude), Double.parseDouble(clientCoord.latitude),
-					Double.parseDouble(clientCoord.longitude));
+			double distance = distanceInKmBetweenEarthCoordinates(Double.parseDouble(car.getCoordinates().getLatitude()),
+					Double.parseDouble(car.getCoordinates().getLongitude()), Double.parseDouble(clientCoord.getLatitude()),
+					Double.parseDouble(clientCoord.getLongitude()));
 			if (distance < minDistance) {
 				minDistance = distance;
 				result = car;

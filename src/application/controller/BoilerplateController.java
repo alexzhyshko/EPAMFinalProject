@@ -17,23 +17,43 @@ public class BoilerplateController extends HttpServlet {
 	private static Router router = (Router) ApplicationContext.getSingletonComponent(Router.class);
 
 	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		router.routeGet(req, resp);
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException {
+		try {
+			router.routeGet(req, resp);
+		} catch (IOException e) {
+			// TODO implement logging
+			e.printStackTrace();
+		}
 	}
 
 	@Override
-	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		router.routePost(req, resp);
+	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException {
+		try {
+			router.routePost(req, resp);
+		} catch (IOException e) {
+			// TODO implement logging
+			e.printStackTrace();
+		}
 	}
 
 	@Override
-	protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		router.routePut(req, resp);
+	protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException {
+		try {
+			router.routePut(req, resp);
+		} catch (IOException e) {
+			// TODO implement logging
+			e.printStackTrace();
+		}
 	}
 
 	@Override
-	protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		router.routeDelete(req, resp);
+	protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException {
+		try {
+			router.routeDelete(req, resp);
+		} catch (IOException e) {
+			// TODO implement logging
+			e.printStackTrace();
+		}
 	}
 
 }

@@ -19,6 +19,7 @@ import main.java.entity.Order;
 import main.java.entity.Role;
 import main.java.entity.Route;
 import main.java.entity.User;
+import main.java.exception.IncorrectDateFormatException;
 import main.java.service.CarService;
 import main.java.service.DriverService;
 import main.java.service.UserService;
@@ -98,13 +99,8 @@ public class OrderRepository {
 			}
 		}
 
-		Order result = new Order();
-		result.id = orderId;
-		result.car = car;
-		result.driver = driver;
-		result.price = price;
-		result.customer = customer;
-		result.route = route;
+		Order result = Order.builder().id(orderId).car(car).driver(driver).price(price).customer(customer).route(route)
+				.build();
 		return Optional.of(result);
 	}
 
@@ -174,14 +170,7 @@ public class OrderRepository {
 			getOrderIds.setInt(4, limit - skip);
 			try (ResultSet rs = getOrderIds.executeQuery()) {
 				while (rs.next()) {
-					Order order = new Order();
 					Route route = new Route();
-					order.id = rs.getInt("orderId");
-					order.price = rs.getFloat("orderPrice");
-					order.timeToArrival = rs.getInt("orderTime");
-					order.dateOfOrder = rs.getTimestamp("orderDate").toLocalDateTime();
-					order.statusid = status;
-					order.status = rs.getString("orderStatus");
 					route.distance = rs.getFloat("orderDistance");
 					route.time = rs.getInt("orderTime");
 					Coordinates routeDeparture = new Coordinates(rs.getString("orderDepartLng"),
@@ -201,10 +190,11 @@ public class OrderRepository {
 							.coordinates(new Coordinates(rs.getString("carLng"), rs.getString("carLat"))).build();
 					Driver driver = Driver.builder().id(rs.getInt("driverId")).name(rs.getString("driverName"))
 							.surname(rs.getString("driverSurname")).rating(rs.getFloat("driverRating")).build();
-					order.route = route;
-					order.customer = user;
-					order.car = car;
-					order.driver = driver;
+					Order order = Order.builder().id(rs.getInt("orderId")).price(rs.getFloat("orderPrice"))
+							.timeToArrival(rs.getInt("orderTime"))
+							.dateOfOrder(rs.getTimestamp("orderDate").toLocalDateTime()).statusid(status)
+							.status(rs.getString("orderStatus")).route(route).customer(user).car(car).driver(driver)
+							.build();
 					result.add(order);
 				}
 				connection.commit();
@@ -217,27 +207,67 @@ public class OrderRepository {
 	}
 
 	public Optional<Order> getOrderById(int orderId, String userLocale) {
-		String query = "SELECT id, price, distance, timeOccupancy, dateOfOrder, departure_coordinate_id, destination_coordinate_id, user_id, status_id FROM Orders WHERE id=?";
+		String query = "select orders.id as 'orderId',\r\n" + "orders.price as 'orderPrice',\r\n"
+				+ "orders.distance as 'orderDistance',\r\n" + "orders.timeOccupancy as 'orderTime',\r\n"
+				+ "orders.dateOfOrder as 'orderDate',\r\n" + "order_depart_coord.longitude as 'orderDepartLng',\r\n"
+				+ "order_depart_coord.latitude as 'orderDepartLat',\r\n"
+				+ "order_dest_coord.longitude as 'orderDestLng',\r\n"
+				+ "order_dest_coord.latitude as 'orderDestLat',\r\n" + "order_translation.text_" + userLocale
+				+ " as 'orderStatus',\r\n" + "orders.status_id as 'orderStatusId',\r\n" + "`Users`.id as 'userId',\r\n"
+				+ "`Users`.username as 'username',\r\n" + "`Users`.name as 'userName',\r\n"
+				+ "`Users`.surname as 'userSurname',\r\n" + "`Users`.rating as 'userRating',\r\n"
+				+ "user_roles.name as 'userRole',\r\n" + "Cars.id as 'carId',\r\n" + "Cars.plate as 'carPlate',\r\n"
+				+ "Manufacturers.name as 'carManufacturer',\r\n" + "Models.name as 'carModel',\r\n"
+				+ "Cars.price_multiplier as 'carPriceMult',\r\n" + "car_translation.text_" + userLocale
+				+ " as 'carCategory',\r\n" + "Cars.passengerCount as 'carPassengerCount',\r\n"
+				+ "car_coord.longitude as 'carLng',\r\n" + "car_coord.latitude as 'carLat',\r\n"
+				+ "Drivers.id as 'driverId',\r\n" + "Drivers.name as 'driverName',\r\n"
+				+ "Drivers.surname as 'driverSurname',\r\n" + "Drivers.rating as 'driverRating'\r\n " + "\r\n"
+				+ "FROM orders\r\n "
+				+ "JOIN Coordinates order_depart_coord ON order_depart_coord.id = orders.departure_coordinate_id \r\n"
+				+ "JOIN Coordinates order_dest_coord ON order_dest_coord.id = orders.destination_coordinate_id \r\n"
+				+ "JOIN order_status ON order_status.id = orders.status_id \r\n"
+				+ "JOIN Translations order_translation ON order_translation.id = order_status.name_translations_id \r\n"
+				+ "JOIN `Users` ON orders.user_id = `Users`.id \r\n"
+				+ "JOIN user_roles ON user_roles.id = `Users`.role_id \r\n"
+				+ "JOIN Driving ON Orders.driving_id = Driving.id \r\n" + "JOIN Cars ON Cars.id = Driving.car_id \r\n"
+				+ "JOIN Manufacturers ON Cars.manufacturer_id = Manufacturers.id \r\n"
+				+ "JOIN Models ON Cars.model_id = Models.id \r\n"
+				+ "JOIN Translations car_translation ON Cars.category_translation_id = car_translation.id \r\n"
+				+ "JOIN Coordinates car_coord ON Cars.coordinates_id = car_coord.id \r\n"
+				+ "JOIN Drivers ON Driving.driver_id = Drivers.id \r\n" + "WHERE Orders.id=?";
 		Connection connection = getNewConnection();
-		Order order = new Order();
-		int departureCoordId = -1;
-		int destinationCoordId = -1;
-		UUID userid = null;
+
 		try (PreparedStatement getOrderIds = connection.prepareStatement(query)) {
 			getOrderIds.setInt(1, orderId);
 			try (ResultSet rs = getOrderIds.executeQuery()) {
 				while (rs.next()) {
-					order.id = rs.getInt(1);
-					order.price = rs.getFloat(2);
-					order.statusid = rs.getInt(9);
 					Route route = new Route();
-					route.distance = rs.getFloat(3);
-					route.time = rs.getInt(4);
-					order.route = route;
-					order.dateOfOrder = rs.getTimestamp(5).toLocalDateTime();
-					departureCoordId = rs.getInt(6);
-					destinationCoordId = rs.getInt(7);
-					userid = UUID.fromString(rs.getString(8));
+					route.distance = rs.getFloat("orderDistance");
+					route.time = rs.getInt("orderTime");
+					Coordinates routeDeparture = new Coordinates(rs.getString("orderDepartLng"),
+							rs.getString("orderDepartLat"));
+					Coordinates routeDestination = new Coordinates(rs.getString("orderDestLng"),
+							rs.getString("orderDestLat"));
+					route.departure = routeDeparture;
+					route.destination = routeDestination;
+					User user = User.builder().id(UUID.fromString(rs.getString("userId")))
+							.username(rs.getString("username")).name(rs.getString("userName"))
+							.surname(rs.getString("userSurname")).rating(rs.getFloat("userRating"))
+							.role(Role.valueOf(rs.getString("userRole"))).build();
+					Car car = Car.builder().id(rs.getInt("carId")).plate(rs.getString("carPlate"))
+							.manufacturer(rs.getString("carManufacturer")).model(rs.getString("carModel"))
+							.category(rs.getString("carCategory")).passengerCount(rs.getInt("carPassengerCount"))
+							.priceMultiplier(rs.getFloat("carPriceMult"))
+							.coordinates(new Coordinates(rs.getString("carLng"), rs.getString("carLat"))).build();
+					Driver driver = Driver.builder().id(rs.getInt("driverId")).name(rs.getString("driverName"))
+							.surname(rs.getString("driverSurname")).rating(rs.getFloat("driverRating")).build();
+					Order order = Order.builder().id(rs.getInt("orderId")).price(rs.getFloat("orderPrice"))
+							.timeToArrival(rs.getInt("orderTime"))
+							.dateOfOrder(rs.getTimestamp("orderDate").toLocalDateTime())
+							.statusid(rs.getInt("orderStatusId")).status(rs.getString("orderStatus")).route(route)
+							.customer(user).car(car).driver(driver).build();
+					return Optional.of(order);
 				}
 				connection.commit();
 			}
@@ -245,19 +275,8 @@ public class OrderRepository {
 			e.printStackTrace();
 			return Optional.empty();
 		}
-		User user = userService.getUserById(userid);
-		order.customer = user;
-		Car car = carService.getCarByOrderId(order.id, userLocale);
-		order.car = car;
-		Driver driver = driverService.getDriverByCar(car);
-		order.driver = driver;
-		Coordinates departure = coordinateRepository.getCoordinatesById(departureCoordId)
-				.orElseThrow(NullPointerException::new);
-		Coordinates destination = coordinateRepository.getCoordinatesById(destinationCoordId)
-				.orElseThrow(NullPointerException::new);
-		order.route.departure = departure;
-		order.route.destination = destination;
-		return Optional.of(order);
+		return Optional.empty();
+
 	}
 
 	public List<Order> getAllOrders(String userLocale, String filterBy, String value, int skip, int limit,
@@ -311,14 +330,7 @@ public class OrderRepository {
 			getOrderIds.setInt(startParameterIndex + 2, limit - skip);
 			try (ResultSet rs = getOrderIds.executeQuery()) {
 				while (rs.next()) {
-					Order order = new Order();
 					Route route = new Route();
-					order.id = rs.getInt("orderId");
-					order.price = rs.getFloat("orderPrice");
-					order.timeToArrival = rs.getInt("orderTime");
-					order.dateOfOrder = rs.getTimestamp("orderDate").toLocalDateTime();
-					order.statusid = rs.getInt("orderStatusId");
-					order.status = rs.getString("orderStatus");
 					route.distance = rs.getFloat("orderDistance");
 					route.time = rs.getInt("orderTime");
 					Coordinates routeDeparture = new Coordinates(rs.getString("orderDepartLng"),
@@ -338,17 +350,17 @@ public class OrderRepository {
 							.coordinates(new Coordinates(rs.getString("carLng"), rs.getString("carLat"))).build();
 					Driver driver = Driver.builder().id(rs.getInt("driverId")).name(rs.getString("driverName"))
 							.surname(rs.getString("driverSurname")).rating(rs.getFloat("driverRating")).build();
-					order.route = route;
-					order.customer = user;
-					order.car = car;
-					order.driver = driver;
+					Order order = Order.builder().id(rs.getInt("orderId")).price(rs.getFloat("orderPrice"))
+							.timeToArrival(rs.getInt("orderTime"))
+							.dateOfOrder(rs.getTimestamp("orderDate").toLocalDateTime())
+							.statusid(rs.getInt("orderStatusId")).status(rs.getString("orderStatus")).route(route)
+							.customer(user).car(car).driver(driver).build();
 					result.add(order);
 				}
 				connection.commit();
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
-			return new ArrayList<>();
+			throw new IncorrectDateFormatException(e.getMessage()+"\r\nUse yyyy-MM-dd");
 		}
 		return result;
 	}
@@ -382,7 +394,7 @@ public class OrderRepository {
 		}
 		Connection connection = getNewConnection();
 		try (PreparedStatement getOrderCount = connection.prepareStatement(query)) {
-			if(!filterBy.isBlank())
+			if (!filterBy.isBlank())
 				getOrderCount.setString(1, value);
 			try (ResultSet rs = getOrderCount.executeQuery()) {
 				Optional<Integer> count = Optional.empty();

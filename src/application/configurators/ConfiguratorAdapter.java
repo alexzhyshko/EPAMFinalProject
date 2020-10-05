@@ -1,7 +1,7 @@
 package application.configurators;
 
-public abstract class ConfiguratorAdapter{
+public interface ConfiguratorAdapter{
 
-	public static void configure(Object object) {}
+	public void configure(Object object);
 	
 }

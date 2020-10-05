@@ -27,8 +27,8 @@ public class CoordinateRepository {
 		Connection connection = getNewConnection();
 		try (PreparedStatement insertDeparture = connection.prepareStatement(insertCoordAndGetId);
 				PreparedStatement selectDepartureId = connection.prepareStatement(selectLastInsertId)) {
-			insertDeparture.setString(1, coordinates.longitude);
-			insertDeparture.setString(2, coordinates.latitude);
+			insertDeparture.setString(1, coordinates.getLongitude());
+			insertDeparture.setString(2, coordinates.getLatitude());
 			insertDeparture.executeUpdate();
 			connection.commit();
 			try (ResultSet result = selectDepartureId.executeQuery()) {

@@ -25,6 +25,7 @@ import main.java.dto.response.RefreshTokenResponse;
 import main.java.entity.User;
 import main.java.service.AuthService;
 import main.java.service.HashService;
+import main.java.service.LocalizationService;
 import main.java.service.TokenService;
 import main.java.service.UserService;
 
@@ -44,27 +45,32 @@ public class AuthController {
 	UserService userService;
 
 	@Inject
+	LocalizationService localizator;
+	
+	@Inject
 	private HashService hashService;
 	
 	
 	@Mapping(route = "/login", requestType = RequestType.POST)
 	public void getLoginRequest(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+		String userLocale = req.getHeader("User_Locale");
 		String body = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
 		LoginRequest requestObj = gson.fromJson(body, LoginRequest.class);
 		String refreshToken = UUID.randomUUID().toString();
-		User user = User.builder().username(requestObj.username).password(hashService.hashStringMD5(requestObj.password))
+		User user = User.builder().username(requestObj.getUsername()).password(hashService.hashStringMD5(requestObj.getPassword()))
 				.refreshToken(refreshToken).build();
 		boolean login = authService.login(user);
 		if (!login) {
 			resp.setStatus(HttpStatus.SC_NOT_FOUND);
-			resp.getWriter().append("Incorrect username or password").flush();
+			resp.getWriter().append(localizator.getPropertyByLocale(userLocale, "incorrectUsernameOrPassword")).flush();
 			return;
 		}
 		String jwt = tokenService.generateJwt(user);
-		LoginResponse response = new LoginResponse();
-		response.refreshToken = refreshToken;
-		response.token = jwt;
-		response.username = user.getUsername();
+		LoginResponse response = LoginResponse.builder()
+				.refreshToken(refreshToken)
+				.token(jwt)
+				.username(user.getUsername())
+				.build();
 		user.setToken(jwt);
 		userService.updateToken(user, jwt);
 		userService.updateRefreshToken(user, refreshToken);
@@ -77,50 +83,53 @@ public class AuthController {
 
 	@Mapping(route = "/register", requestType = RequestType.POST)
 	public void getRegisterRequest(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+		String userLocale = req.getHeader("User_Locale");
 		String body = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
 		RegisterRequest requestObj = gson.fromJson(body, RegisterRequest.class);
-		User user = User.builder().name(requestObj.name).username(requestObj.username).surname(requestObj.surname)
-				.password(hashService.hashStringMD5(requestObj.password)).build();
+		User user = User.builder().name(requestObj.getName()).username(requestObj.getUsername()).surname(requestObj.getSurname())
+				.password(hashService.hashStringMD5(requestObj.getPassword())).build();
 		boolean created = userService.tryCreateUser(user);
 		if(created) {
 			resp.setStatus(HttpStatus.SC_CREATED);
-			resp.getWriter().append("Registration successful").flush();
+			resp.getWriter().append(localizator.getPropertyByLocale(userLocale, "registrationSuccessful")).flush();
 			return;
 		}
 		resp.setStatus(HttpStatus.SC_CONFLICT);
-		resp.getWriter().append("User with this username already exists").flush();
+		resp.getWriter().append(localizator.getPropertyByLocale(userLocale, "userExists")).flush();
 	}
 
 	@Mapping(route = "/refreshToken:arg:arg", requestType = RequestType.GET)
 	public void getRefreshTokenRequest(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+		String userLocale = req.getHeader("User_Locale");
 		String refreshToken = req.getParameter("refreshToken");
 		String token = req.getParameter("token");
 		if (refreshToken == null) {
 			resp.setContentType("text/plain");
 			resp.setStatus(HttpStatus.SC_FORBIDDEN);
-			resp.getWriter().append("Refresh token = null").flush();
+			resp.getWriter().append(localizator.getPropertyByLocale(userLocale, "refreshTokenNull")).flush();
 			return;
 		}
 		User user = AuthContext.getUserByToken(token);
 		if (user == null) {
 			resp.setContentType("text/plain");
 			resp.setStatus(HttpStatus.SC_FORBIDDEN);
-			resp.getWriter().append("Not authorized").flush();
+			resp.getWriter().append(localizator.getPropertyByLocale(userLocale, "notAuthorized")).flush();
 			return;
 		}
 		String refreshTokenOfUser = user.getRefreshToken();
 		if (refreshTokenOfUser == null || !refreshTokenOfUser.equals(refreshToken)) {
 			resp.setContentType("text/plain");
 			resp.setStatus(HttpStatus.SC_FORBIDDEN);
-			resp.getWriter().append("Refresh token of user null or not equals").flush();
+			resp.getWriter().append(localizator.getPropertyByLocale(userLocale, "refreshTokenNull")).flush();
 			return;
 		}
 		String newToken = tokenService.generateJwt(user);
 		user.setToken(newToken);
 		userService.updateToken(user, newToken);
-		RefreshTokenResponse response = new RefreshTokenResponse();
-		response.refreshToken = refreshTokenOfUser;
-		response.token = newToken;
+		RefreshTokenResponse response = RefreshTokenResponse.builder()
+			.refreshToken(refreshTokenOfUser)
+			.token(newToken)
+			.build();
 		String jsonResponse = gson.toJson(response);
 		resp.setContentType("text/json");
 		resp.setStatus(HttpStatus.SC_OK);
@@ -129,9 +138,10 @@ public class AuthController {
 	
 	@Mapping(route = "/logout", requestType = RequestType.POST)
 	public void getLogoutRequest(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+		String userLocale = req.getHeader("User_Locale");
 		String body = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
 		LogoutRequest request = gson.fromJson(body, LogoutRequest.class);
-		String token = request.token;
+		String token = request.getToken();
 		User user = AuthContext.getUserByToken(token);
 		if (user == null) {
 			resp.setStatus(400);
@@ -140,7 +150,7 @@ public class AuthController {
 		AuthContext.deauthorize(user);
 		userService.deleteToken(token);
 		resp.setStatus(HttpStatus.SC_OK);
-		resp.getWriter().append("OK").flush();
+		resp.getWriter().append(localizator.getPropertyByLocale(userLocale, "ok")).flush();
 	}
 
 }
