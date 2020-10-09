@@ -200,6 +200,12 @@ public class OrderRepository {
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return new ArrayList<>();
+		} finally {
+			try {
+				connection.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
 		}
 		return result;
 	}
@@ -272,6 +278,12 @@ public class OrderRepository {
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return Optional.empty();
+		} finally {
+			try {
+				connection.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
 		}
 		return Optional.empty();
 
@@ -359,6 +371,12 @@ public class OrderRepository {
 			}
 		} catch (SQLException e) {
 			throw new IncorrectDateFormatException(e.getMessage()+"\r\nUse yyyy-MM-dd");
+		} finally {
+			try {
+				connection.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
 		}
 		return result;
 	}
@@ -380,6 +398,12 @@ public class OrderRepository {
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return Optional.empty();
+		} finally {
+			try {
+				connection.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -405,6 +429,12 @@ public class OrderRepository {
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return Optional.empty();
+		} finally {
+			try {
+				connection.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 

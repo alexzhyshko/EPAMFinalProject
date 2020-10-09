@@ -37,6 +37,12 @@ public class CoordinateRepository {
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return Optional.empty();
+		} finally {
+			try {
+				connection.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -55,6 +61,12 @@ public class CoordinateRepository {
 		}catch (SQLException e) {
 			e.printStackTrace();
 			return Optional.empty();
+		} finally {
+			try {
+				connection.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 

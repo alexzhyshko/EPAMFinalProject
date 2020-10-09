@@ -30,8 +30,7 @@ public class DBConnectionManager {
 	public static Connection getConnection() {
 		Connection conn;
 		try {
-			conn = ds.getConnection();
-			return conn;
+			return ds.getConnection();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
