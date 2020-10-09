@@ -43,7 +43,8 @@ public class UserController {
 			return;
 		}
 		try {
-			User user = userService.getUserById(userId);
+			User user = this.userService.getUserById(userId);
+			user.setPassword(null);
 			resp.setContentType("text/json");
 			resp.setStatus(HttpStatus.SC_OK);
 			resp.getWriter().append(gson.toJson(user)).flush();
@@ -51,6 +52,7 @@ public class UserController {
 			resp.setStatus(HttpStatus.SC_NOT_FOUND);
 			resp.getWriter().append(e.getMessage()).flush();
 		}
+		
 	}
 
 	@Mapping(route = "/user/getByUsername:arg", requestType = RequestType.GET)
@@ -68,6 +70,7 @@ public class UserController {
 			resp.getWriter().append(localizator.getPropertyByLocale(userLocale, "userNotFound")).flush();
 			return;
 		}
+		user.setPassword(null);
 		resp.setContentType("text/json");
 		resp.setStatus(HttpStatus.SC_OK);
 		resp.getWriter().append(gson.toJson(user)).flush();
