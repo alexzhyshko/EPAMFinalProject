@@ -7,7 +7,7 @@ public class DefaultFilterChecks {
 
 	private DefaultFilterChecks() {}
 	
-	private static List<String> exceptions = Arrays.asList("/login", "/register", "/refreshToken");
+	private static List<String> exceptions = Arrays.asList("/login", "/register", "/refreshToken", "/signoff");
 	
 	private static String adminPaths = "/admin";
 	

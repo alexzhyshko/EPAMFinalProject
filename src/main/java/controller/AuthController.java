@@ -79,9 +79,12 @@ public class AuthController {
 		}
 	}
 
-	@Mapping(route = "/logout", requestType = RequestType.POST)
+	@Mapping(route = "/signoff", requestType = RequestType.POST)
 	public void getLogoutRequest(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		String userLocale = req.getHeader("User_Locale");
+		if(userLocale==null) {
+			userLocale = "EN";
+		}
 		try {
 			LogoutRequest request = HttpUtils.parseBody(req, LogoutRequest.class)
 					.orElseThrow(() -> new CouldNotParseBodyException("Could not parse body"));

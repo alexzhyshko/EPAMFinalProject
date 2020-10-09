@@ -12,6 +12,7 @@ import main.java.dto.response.LoginResponse;
 import main.java.dto.response.RefreshTokenResponse;
 import main.java.entity.User;
 import main.java.exception.AuthException;
+import main.java.exception.DuplicateLoginException;
 import main.java.exception.DuplicateUserException;
 import main.java.exception.LogoutException;
 
@@ -36,6 +37,7 @@ public class AuthService {
 		if(!userService.userExists(user)) {
 			return false;
 		}
+		LoginRegister.removeFromRegisterIfLoggedIn(user.getUsername()).orElseThrow(()-> new DuplicateLoginException("User is not logged in"));
 		AuthContext.deauthorize(user);
 		return true;
 	}
@@ -44,6 +46,7 @@ public class AuthService {
 		if(!userService.userExistsWithPasswordEquals(user)) {
 			return false;
 		}
+		LoginRegister.addToRegisterIfNotLoggedIn(user.getUsername()).orElseThrow(()-> new DuplicateLoginException("User is already logged in"));
 		AuthContext.authorize(user);
 		return true;
 	}
@@ -98,8 +101,8 @@ public class AuthService {
 		if (user == null) {
 			throw new LogoutException("Could not logout");
 		}
-		AuthContext.deauthorize(user);
 		userService.deleteToken(token);
+		logout(user);
 	}
 	
 }
