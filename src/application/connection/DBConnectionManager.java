@@ -1,41 +1,40 @@
 package application.connection;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+
+import org.apache.tomcat.dbcp.dbcp2.BasicDataSource;
+
 import application.context.annotation.Component;
-import application.context.reader.PropertyReader;
 
 @Component
 public class DBConnectionManager {
+	private static final String DATASOURCE_NAME = "jdbc/conn";
+	private static BasicDataSource ds = null;
 
-	private PropertyReader propertyReader = new PropertyReader();
-
-	private String connectionURL;
-	private String user;
-	private String password;
-
-	public DBConnectionManager() {
-		this.connectionURL = propertyReader.getProperty("database.connection.url");
-		this.user = propertyReader.getProperty("database.user");
-		this.password = propertyReader.getProperty("database.password");
+	static {
+		Context initContext;
 		try {
-			Class.forName("com.mysql.cj.jdbc.Driver");
-		} catch (ClassNotFoundException e) {
+			initContext = new InitialContext();
+			Context envContext = (Context) initContext.lookup("java:/comp/env");
+			ds = (BasicDataSource) envContext.lookup(DATASOURCE_NAME);
+		} catch (NamingException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public Connection getConnection() {
+	public static Connection getConnection() {
+		Connection conn;
 		try {
-			Connection connection = DriverManager.getConnection(this.connectionURL, this.user, this.password);
-			connection.setAutoCommit(false);
-			return connection;
+			conn = ds.getConnection();
+			return conn;
 		} catch (SQLException e) {
 			e.printStackTrace();
-			throw new RuntimeException("Connection couldn't be initialized");
 		}
+		throw new NullPointerException("Could not generate datasource");
 	}
-
 }

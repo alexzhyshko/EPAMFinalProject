@@ -8,17 +8,13 @@ import java.util.Optional;
 
 import application.connection.DBConnectionManager;
 import application.context.annotation.Component;
-import application.context.annotation.Inject;
 import main.java.entity.Coordinates;
 
 @Component
 public class CoordinateRepository {
 
-	@Inject
-	private DBConnectionManager connectionManager;
-
 	private Connection getNewConnection() {
-		return this.connectionManager.getConnection();
+		return DBConnectionManager.getConnection();
 	}
 
 	public Optional<Integer> insertCoordinatesAndReturnId(Coordinates coordinates) {

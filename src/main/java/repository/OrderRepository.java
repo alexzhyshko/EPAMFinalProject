@@ -27,8 +27,6 @@ import main.java.service.UserService;
 @Component
 public class OrderRepository {
 
-	@Inject
-	private DBConnectionManager connectionManager;
 
 	@Inject
 	private CarService carService;
@@ -43,7 +41,7 @@ public class OrderRepository {
 	private CoordinateRepository coordinateRepository;
 
 	private Connection getNewConnection() {
-		return this.connectionManager.getConnection();
+		return DBConnectionManager.getConnection();
 	}
 
 	public Optional<Order> tryCreateOrder(Route route, User customer, Driver driver, Car car, float price) {

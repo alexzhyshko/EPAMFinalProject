@@ -8,18 +8,14 @@ import java.util.Optional;
 
 import application.connection.DBConnectionManager;
 import application.context.annotation.Component;
-import application.context.annotation.Inject;
 import main.java.entity.Car;
 import main.java.entity.Driver;
 
 @Component
 public class DriverRepository {
 
-	@Inject
-	private DBConnectionManager connectionManager;
-	
 	private Connection getNewConnection() {
-		return this.connectionManager.getConnection();
+		return DBConnectionManager.getConnection();
 	}
 	
 	public Optional<Driver> getDriverByCar(Car car) {

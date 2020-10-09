@@ -12,18 +12,14 @@ import java.util.UUID;
 
 import application.connection.DBConnectionManager;
 import application.context.annotation.Component;
-import application.context.annotation.Inject;
 import main.java.entity.Role;
 import main.java.entity.User;
 
 @Component
 public class UserRepository {
 
-	@Inject
-	private DBConnectionManager connectionManager;
-
 	private Connection getNewConnection() {
-		return this.connectionManager.getConnection();
+		return DBConnectionManager.getConnection();
 	}
 	
 	private void createTokenForUserByUsername(String username, String newToken) {
