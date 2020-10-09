@@ -171,6 +171,12 @@ public class CarRepository {
 			} catch (SQLException e1) {
 				e1.printStackTrace();
 			}
+		} finally {
+			try {
+				connection.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	
