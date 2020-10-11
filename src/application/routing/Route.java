@@ -1,15 +1,17 @@
 package application.routing;
 
+import java.lang.reflect.Method;
+
 public class Route {
 
 	private String path;
-	private String methodName;
+	private Method method;
 	private Class routeClass;
 
-	public Route(String path, String methodName, Class routeClass) {
+	public Route(String path, Method method, Class routeClass) {
 		super();
 		this.path = path;
-		this.methodName = methodName;
+		this.method = method;
 		this.routeClass = routeClass;
 	}
 
@@ -17,8 +19,8 @@ public class Route {
 		return path;
 	}
 
-	public String getMethodName() {
-		return methodName;
+	public Method getMethod() {
+		return method;
 	}
 
 	public Class getRouteClass() {

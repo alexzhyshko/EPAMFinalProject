@@ -10,8 +10,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 import application.connection.DBConnectionManager;
-import application.context.annotation.Component;
-import application.context.annotation.Inject;
+import application.context.annotation.component.Component;
+import application.context.annotation.inject.Inject;
 import main.java.entity.Car;
 import main.java.entity.Coordinates;
 import main.java.entity.Driver;

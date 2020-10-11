@@ -7,8 +7,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 
-import application.context.annotation.Component;
-import application.context.annotation.Inject;
+import application.context.annotation.component.Component;
+import application.context.annotation.inject.Inject;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import main.java.entity.User;

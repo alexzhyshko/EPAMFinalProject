@@ -4,7 +4,7 @@ import java.security.MessageDigest;
 
 import javax.xml.bind.DatatypeConverter;
 
-import application.context.annotation.Component;
+import application.context.annotation.component.Component;
 
 @Component
 public class HashService {

@@ -1,22 +1,21 @@
 package main.java.controller;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.http.HttpStatus;
 import org.apache.http.entity.ContentType;
 
-import application.context.annotation.Component;
-import application.context.annotation.Inject;
-import application.context.annotation.Mapping;
-import application.context.annotation.RestController;
+import application.context.annotation.component.Component;
+import application.context.annotation.component.RestController;
+import application.context.annotation.inject.Inject;
+import application.context.annotation.mapping.Mapping;
+import application.context.annotation.mapping.RequestHeader;
+import application.context.annotation.mapping.RequestParameter;
 import application.context.annotation.mapping.RequestType;
+import application.entity.ResponseEntity;
 import main.java.dto.PaginationFilteringSortingDTO;
 import main.java.dto.response.UserOrdersResponse;
 import main.java.exception.NothingFoundException;
 import main.java.service.LocalizationService;
 import main.java.service.OrderService;
-import main.java.utils.HttpUtils;
 
 @Component
 @RestController
@@ -28,34 +27,27 @@ public class AdminController {
 	@Inject
 	LocalizationService localizator;
 	
-	private PaginationFilteringSortingDTO parseDtoFromRequest(HttpServletRequest req, String userLocale) {
-		boolean sort = req.getParameter("sort").equalsIgnoreCase("true");
-		boolean filter = req.getParameter("filter").equalsIgnoreCase("true");
-		String sortBy = req.getParameter("sortBy");
-		String sortOrder = req.getParameter("sortOrder");
-		String filterBy = req.getParameter("filterBy");
-		String value = req.getParameter("value");
-		int page = HttpUtils.parseInputParameter(req, "page", userLocale, Integer.class);
-		return PaginationFilteringSortingDTO.builder()
-			.sort(sort)
-			.filter(filter)
-			.sortBy(sortBy)
-			.order(sortOrder)
-			.filterBy(filterBy)
-			.value(value)
-			.page(page)
-			.build();
-	}
-	
 	@Mapping(route = "/admin/order/get/all:arg:arg:arg:arg:arg:arg:arg", requestType = RequestType.GET)
-	public void getAllOrdersSortedFiltered(HttpServletRequest req, HttpServletResponse resp){
-		String userLocale = req.getHeader("User_Locale");
-		PaginationFilteringSortingDTO dto = parseDtoFromRequest(req, userLocale);
+	public ResponseEntity<Object> getAllOrdersSortedFiltered(@RequestParameter("sort") Boolean sort,
+			@RequestParameter("filter") Boolean filter,
+			@RequestParameter("sortBy") String sortBy,
+			@RequestParameter("sortOrder") String sortOrder,
+			@RequestParameter("filterBy") String filterBy,
+			@RequestParameter("value") String value,
+			@RequestHeader("User_Locale") String userLocale){
+		PaginationFilteringSortingDTO dto = PaginationFilteringSortingDTO.builder()
+				.sort(sort)
+				.filter(filter)
+				.sortBy(sortBy)
+				.order(sortOrder)
+				.filterBy(filterBy)
+				.value(value)
+				.build();
 		try {
 			UserOrdersResponse response = this.orderService.getAllOrdersSortedFiltered(dto, userLocale).orElseThrow(()->new NothingFoundException("Nothing found by your criteria"));
-			HttpUtils.setResponseBody(resp, response, ContentType.APPLICATION_JSON, HttpStatus.SC_OK);
-		} catch (Exception e) {
-			HttpUtils.setResponseBody(resp, e.getMessage(), ContentType.TEXT_PLAIN, HttpStatus.SC_OK);
+			return new ResponseEntity<>(response, HttpStatus.SC_OK, ContentType.APPLICATION_JSON);
+		} catch (NothingFoundException e) {
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.SC_NOT_FOUND, ContentType.TEXT_PLAIN);
 		}
 	}
 

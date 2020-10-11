@@ -1,18 +1,21 @@
 package main.java.controller;
 
-import java.io.IOException;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.http.HttpStatus;
 import org.apache.http.entity.ContentType;
 
-import application.context.annotation.Component;
-import application.context.annotation.Inject;
-import application.context.annotation.Mapping;
-import application.context.annotation.RestController;
+import application.context.annotation.component.Component;
+import application.context.annotation.component.RestController;
+import application.context.annotation.inject.Inject;
+import application.context.annotation.mapping.Mapping;
+import application.context.annotation.mapping.RequestBody;
+import application.context.annotation.mapping.RequestHeader;
+import application.context.annotation.mapping.RequestParameter;
 import application.context.annotation.mapping.RequestType;
+import application.entity.ResponseEntity;
+import application.utils.HttpUtils;
 import main.java.dto.request.LoginRequest;
 import main.java.dto.request.LogoutRequest;
 import main.java.dto.request.RegisterRequest;
@@ -25,7 +28,6 @@ import main.java.exception.DuplicateUserException;
 import main.java.exception.LogoutException;
 import main.java.service.AuthService;
 import main.java.service.LocalizationService;
-import main.java.utils.HttpUtils;
 
 @Component
 @RestController
@@ -40,61 +42,47 @@ public class AuthController {
 	private static final String USER_LOCALE_HEADER_NAME="User_Locale";
 	
 	@Mapping(route = "/login", requestType = RequestType.POST)
-	public void getLoginRequest(HttpServletRequest req, HttpServletResponse resp){
-		String userLocale = req.getHeader(USER_LOCALE_HEADER_NAME);
+	public ResponseEntity<Object> getLoginRequest(@RequestBody LoginRequest requestObj, @RequestHeader(USER_LOCALE_HEADER_NAME) String userLocale){
 		try {
-			LoginRequest requestObj = HttpUtils.parseBody(req, LoginRequest.class)
-					.orElseThrow(() -> new CouldNotParseBodyException("Could not parse body"));
 			LoginResponse response = this.authService.login(requestObj, userLocale);
-			HttpUtils.setResponseBody(resp, response, ContentType.APPLICATION_JSON, HttpStatus.SC_OK);
+			return new ResponseEntity<>(response, HttpStatus.SC_OK, ContentType.APPLICATION_JSON);
 		} catch (Exception e) {
-			HttpUtils.setResponseBody(resp, e.getMessage(), ContentType.TEXT_PLAIN, HttpStatus.SC_BAD_REQUEST);
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.SC_BAD_REQUEST, ContentType.TEXT_PLAIN);
 		}
 	}
 
 	@Mapping(route = "/register", requestType = RequestType.POST)
-	public void getRegisterRequest(HttpServletRequest req, HttpServletResponse resp){
-		String userLocale = req.getHeader(USER_LOCALE_HEADER_NAME);
+	public ResponseEntity<Object> getRegisterRequest(@RequestBody RegisterRequest requestObj, @RequestHeader(USER_LOCALE_HEADER_NAME) String userLocale){
 		try {
-			RegisterRequest requestObj = HttpUtils.parseBody(req, RegisterRequest.class)
-					.orElseThrow(() -> new CouldNotParseBodyException("Could not parse body"));
 			this.authService.register(requestObj, userLocale);
-			HttpUtils.setResponseBody(resp, "Registered", ContentType.TEXT_PLAIN, HttpStatus.SC_OK);
+			return new ResponseEntity<>("Registered", HttpStatus.SC_OK, ContentType.TEXT_PLAIN);
 		} catch (CouldNotParseBodyException e) {
-			HttpUtils.setResponseBody(resp, e.getMessage(), ContentType.TEXT_PLAIN, HttpStatus.SC_BAD_REQUEST);
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.SC_BAD_REQUEST, ContentType.TEXT_PLAIN);
 		} catch (DuplicateUserException e) {
-			HttpUtils.setResponseBody(resp, e.getMessage(), ContentType.TEXT_PLAIN, HttpStatus.SC_CONFLICT);
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.SC_CONFLICT, ContentType.TEXT_PLAIN);
 		}
 	}
 
 	@Mapping(route = "/refreshToken:arg:arg", requestType = RequestType.GET)
-	public void getRefreshTokenRequest(HttpServletRequest req, HttpServletResponse resp){
-		String userLocale = req.getHeader(USER_LOCALE_HEADER_NAME);
+	public ResponseEntity<Object> getRefreshTokenRequest(@RequestParameter("token") String token, @RequestHeader(USER_LOCALE_HEADER_NAME) String userLocale){
 		try {
-			String token = HttpUtils.parseInputParameter(req, "token", userLocale, String.class);
 			RefreshTokenResponse response = this.authService.refreshToken(token, userLocale);
-			HttpUtils.setResponseBody(resp, response, ContentType.APPLICATION_JSON, HttpStatus.SC_OK);
+			return new ResponseEntity<>(response, HttpStatus.SC_OK, ContentType.APPLICATION_JSON);
 		} catch (AuthException | DuplicateLoginException e) {
-			HttpUtils.setResponseBody(resp, e.getMessage(), ContentType.TEXT_PLAIN, HttpStatus.SC_FORBIDDEN);
-		} catch (IllegalArgumentException e) {
-			HttpUtils.setResponseBody(resp, e.getMessage(), ContentType.TEXT_PLAIN, HttpStatus.SC_BAD_REQUEST);
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.SC_FORBIDDEN, ContentType.TEXT_PLAIN);
 		}
 	}
 
 	@Mapping(route = "/signoff", requestType = RequestType.POST)
-	public void getLogoutRequest(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-		String userLocale = req.getHeader(USER_LOCALE_HEADER_NAME);
+	public ResponseEntity<Object> getLogoutRequest(@RequestBody LogoutRequest request, @RequestHeader(USER_LOCALE_HEADER_NAME) String userLocale){
 		if(userLocale==null) {
 			userLocale = "EN";
 		}
 		try {
-			LogoutRequest request = HttpUtils.parseBody(req, LogoutRequest.class)
-					.orElseThrow(() -> new CouldNotParseBodyException("Could not parse body"));
 			this.authService.logout(request);
-			resp.setStatus(HttpStatus.SC_OK);
-			resp.getWriter().append(localizator.getPropertyByLocale(userLocale, "ok")).flush();
+			return new ResponseEntity<>(localizator.getPropertyByLocale(userLocale, "ok"), HttpStatus.SC_OK, ContentType.TEXT_PLAIN);
 		} catch (LogoutException e) {
-			HttpUtils.setResponseBody(resp, e.getMessage(), ContentType.TEXT_PLAIN, HttpStatus.SC_BAD_REQUEST);
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.SC_BAD_REQUEST, ContentType.TEXT_PLAIN);
 		}
 	}
 

@@ -1,12 +1,10 @@
-package application.context.annotation;
+package application.context.annotation.mapping;
 
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-
-import application.context.annotation.mapping.RequestType;
 
 @Retention(RUNTIME)
 @Target(METHOD)

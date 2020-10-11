@@ -7,7 +7,7 @@ import java.sql.SQLException;
 import java.util.Optional;
 
 import application.connection.DBConnectionManager;
-import application.context.annotation.Component;
+import application.context.annotation.component.Component;
 import main.java.entity.Coordinates;
 
 @Component

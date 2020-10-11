@@ -5,10 +5,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import application.context.ApplicationContext;
-import application.context.annotation.Component;
-import application.context.annotation.Configuration;
-import application.context.annotation.Prototype;
-import application.context.annotation.RestController;
+import application.context.annotation.component.Component;
+import application.context.annotation.component.Prototype;
+import application.context.annotation.component.RestController;
+import application.context.annotation.configuration.Configuration;
 import application.context.configuration.ConfigurationContext;
 import application.context.rest.RestContext;
 

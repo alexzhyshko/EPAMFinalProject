@@ -8,7 +8,7 @@ import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 
-import application.context.annotation.Component;
+import application.context.annotation.component.Component;
 import application.context.reader.PropertyReader;
 
 @Component

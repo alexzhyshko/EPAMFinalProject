@@ -1,4 +1,4 @@
-package main.java.utils;
+package application.utils;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -12,8 +12,8 @@ import org.apache.http.entity.ContentType;
 
 import com.google.gson.Gson;
 
-import application.context.annotation.Component;
-import application.context.annotation.Inject;
+import application.context.annotation.component.Component;
+import application.context.annotation.inject.Inject;
 import main.java.service.LocalizationService;
 
 @Component
@@ -34,9 +34,9 @@ public class HttpUtils {
 		}
 	}
 
-	public static <T> boolean setResponseBody(HttpServletResponse resp, T payload, ContentType contentType, int responseStatus) {
+	public static <T> boolean setResponseBody(HttpServletResponse resp, T payload, ContentType contentType, int responseStatus, String charset) {
 		try {
-			resp.setContentType(contentType.toString()+";charset=UTF-8");
+			resp.setContentType(contentType.toString()+";charset="+charset);
 			resp.setStatus(responseStatus);
 			resp.getWriter().append(gson.toJson(payload)).flush();
 			return true;
@@ -45,7 +45,7 @@ public class HttpUtils {
 		}
 	}
 
-	public static <T> T parseInputParameter(HttpServletRequest req, String parameterName, String userLocale, Class<T> type) {
+	public static <T> T parseInputParameter(HttpServletRequest req, String parameterName, Class<T> type) {
 		try {
 			if(type==String.class) {
 				return (T)req.getParameter(parameterName);
@@ -56,15 +56,19 @@ public class HttpUtils {
 			if(type==UUID.class) {
 				return (T)UUID.fromString(req.getParameter(parameterName));
 			}
+			if(type==Boolean.class) {
+				return (T)Boolean.valueOf(req.getParameter("sort").equalsIgnoreCase("true"));
+			}
 			throw new UnsupportedOperationException(type+" is not supported");
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new IllegalArgumentException(localizator.getPropertyByLocale(userLocale, "incorrectParameter"));
+			throw new IllegalArgumentException("Incorrect parameter");
 		}
 	}
 	
-	public static String parseAuthHeader(HttpServletRequest req) {
-		return req.getHeader("Authorization").substring(7);
+	public static String parseAuthHeader(String authHeader) {
+		return authHeader.substring(7);
 	}
+	
 	
 }
