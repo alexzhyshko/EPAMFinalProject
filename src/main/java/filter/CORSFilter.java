@@ -25,7 +25,7 @@ public class CORSFilter implements Filter {
 			active = act.equalsIgnoreCase("true");
 	}
 
-	private void setAccessControlHeaders(HttpServletResponse resp) {
+	private void setHeaders(HttpServletResponse resp) {
 		resp.setHeader("Access-Control-Allow-Origin", "http://localhost:4200");
 		resp.setHeader("Access-Control-Allow-Methods", "*");
 		resp.setHeader("Access-Control-Allow-Headers", "*");
@@ -41,7 +41,7 @@ public class CORSFilter implements Filter {
 		if (active) {
 			HttpServletRequest httpReq = (HttpServletRequest) request;
 			HttpServletResponse httpRes = (HttpServletResponse) response;
-			setAccessControlHeaders(httpRes);
+			setHeaders(httpRes);
 			if ("OPTIONS".equalsIgnoreCase(httpReq.getMethod())) {
 				httpRes.setStatus(HttpServletResponse.SC_OK);
 				return;

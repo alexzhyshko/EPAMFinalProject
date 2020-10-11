@@ -39,13 +39,13 @@ public class OrderController {
 	@Mapping(route = "/order/create:arg:arg", requestType = RequestType.POST)
 	public void onOrderCreateRequestReceived(HttpServletRequest req, HttpServletResponse resp){
 		String userLocale = req.getHeader("User_Locale");
-		String authTokenHeader = req.getHeader("Authorization");
+		String jwt = HttpUtils.parseAuthHeader(req);
 		try {
 			boolean anyCategory = HttpUtils.parseInputParameter(req, "anyCategory", userLocale, Boolean.class);
 			boolean anyCountOfCars = HttpUtils.parseInputParameter(req, "anyCountOfCars", userLocale, Boolean.class);
 			RouteCreateRequest requestObj = HttpUtils.parseBody(req, RouteCreateRequest.class)
 					.orElseThrow(() -> new CouldNotParseBodyException("Could not parse body"));
-			Order order = this.orderService.createOrder(userLocale, anyCategory, anyCountOfCars, authTokenHeader,
+			Order order = this.orderService.createOrder(userLocale, anyCategory, anyCountOfCars, jwt,
 					requestObj);
 			HttpUtils.setResponseBody(resp, order, ContentType.APPLICATION_JSON, HttpStatus.SC_OK);
 		} catch (Exception e) {
@@ -64,25 +64,23 @@ public class OrderController {
 							localizator.getPropertyByLocale(userLocale, "couldNotFindMatchCarByPlaces")));
 			HttpUtils.setResponseBody(resp, routeDetails, ContentType.APPLICATION_JSON, HttpStatus.SC_OK);
 		} catch (Exception e) {
+			System.out.println(e.getMessage());
 			HttpUtils.setResponseBody(resp, e.getMessage(), ContentType.TEXT_PLAIN, HttpStatus.SC_NOT_FOUND);
 		}
 	}
 
 	@Mapping(route = "/order/get/byUserId:arg:arg:arg", requestType = RequestType.GET)
 	public void getOrdersByUserId(HttpServletRequest req, HttpServletResponse resp){
-		System.out.println("request");
 		String userLocale = req.getHeader("User_Locale");
 		String type = HttpUtils.parseInputParameter(req, "type", userLocale, String.class);
 		UUID userid = HttpUtils.parseInputParameter(req, "userId", userLocale, UUID.class);
 		int page = HttpUtils.parseInputParameter(req, "page", userLocale, Integer.class);
-		System.out.println("parsed");
 		try {
 			UserOrdersResponse response = this.orderService.getOrdersByUserId(userLocale, type, userid, page);
 			HttpUtils.setResponseBody(resp, response, ContentType.APPLICATION_JSON, HttpStatus.SC_OK);
 		} catch (Exception e) {
 			HttpUtils.setResponseBody(resp, e.getMessage(), ContentType.TEXT_PLAIN, HttpStatus.SC_NOT_FOUND);
 		}
-		System.out.println("OK");
 	}
 
 	@Mapping(route = "/order/get/byId:arg", requestType = RequestType.GET)

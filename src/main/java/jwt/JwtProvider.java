@@ -19,10 +19,10 @@ public class JwtProvider {
 	
 	private static PropertyReader propertyReader = new PropertyReader();
 	
-	private int LIFETIME;
+	private final int jwtLifetime;
 	
 	public JwtProvider() {
-		this.LIFETIME = Integer.parseInt(propertyReader.getProperty("jwt.lifetime"));
+		this.jwtLifetime = Integer.parseInt(propertyReader.getProperty("jwt.lifetime"));
 	}
 	
 	public String generateJwt(User user) {
@@ -34,7 +34,7 @@ public class JwtProvider {
 				  //.claim("password", password)
 				  .claim("refreshToken", refreshToken)
 				  .setIssuedAt(toDate(LocalDateTime.now()))
-				  .setExpiration(toDate(LocalDateTime.now().plusMinutes(LIFETIME)))
+				  .setExpiration(toDate(LocalDateTime.now().plusMinutes(jwtLifetime)))
 				  .signWith(SignatureAlgorithm.RS256, tokenService.getPrivateKey())
 				  .compact();
 	}

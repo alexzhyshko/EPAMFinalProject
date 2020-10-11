@@ -1,7 +1,5 @@
 package main.java.controller;
 
-import java.io.IOException;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -50,7 +48,7 @@ public class AdminController {
 	}
 	
 	@Mapping(route = "/admin/order/get/all:arg:arg:arg:arg:arg:arg:arg", requestType = RequestType.GET)
-	public void getAllOrdersSortedFiltered(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+	public void getAllOrdersSortedFiltered(HttpServletRequest req, HttpServletResponse resp){
 		String userLocale = req.getHeader("User_Locale");
 		PaginationFilteringSortingDTO dto = parseDtoFromRequest(req, userLocale);
 		try {

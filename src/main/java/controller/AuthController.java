@@ -20,6 +20,7 @@ import main.java.dto.response.LoginResponse;
 import main.java.dto.response.RefreshTokenResponse;
 import main.java.exception.AuthException;
 import main.java.exception.CouldNotParseBodyException;
+import main.java.exception.DuplicateLoginException;
 import main.java.exception.DuplicateUserException;
 import main.java.exception.LogoutException;
 import main.java.service.AuthService;
@@ -36,9 +37,11 @@ public class AuthController {
 	@Inject
 	LocalizationService localizator;
 
+	private static final String USER_LOCALE_HEADER_NAME="User_Locale";
+	
 	@Mapping(route = "/login", requestType = RequestType.POST)
-	public void getLoginRequest(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-		String userLocale = req.getHeader("User_Locale");
+	public void getLoginRequest(HttpServletRequest req, HttpServletResponse resp){
+		String userLocale = req.getHeader(USER_LOCALE_HEADER_NAME);
 		try {
 			LoginRequest requestObj = HttpUtils.parseBody(req, LoginRequest.class)
 					.orElseThrow(() -> new CouldNotParseBodyException("Could not parse body"));
@@ -50,8 +53,8 @@ public class AuthController {
 	}
 
 	@Mapping(route = "/register", requestType = RequestType.POST)
-	public void getRegisterRequest(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-		String userLocale = req.getHeader("User_Locale");
+	public void getRegisterRequest(HttpServletRequest req, HttpServletResponse resp){
+		String userLocale = req.getHeader(USER_LOCALE_HEADER_NAME);
 		try {
 			RegisterRequest requestObj = HttpUtils.parseBody(req, RegisterRequest.class)
 					.orElseThrow(() -> new CouldNotParseBodyException("Could not parse body"));
@@ -65,14 +68,13 @@ public class AuthController {
 	}
 
 	@Mapping(route = "/refreshToken:arg:arg", requestType = RequestType.GET)
-	public void getRefreshTokenRequest(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-		String userLocale = req.getHeader("User_Locale");
+	public void getRefreshTokenRequest(HttpServletRequest req, HttpServletResponse resp){
+		String userLocale = req.getHeader(USER_LOCALE_HEADER_NAME);
 		try {
-			String refreshToken = HttpUtils.parseInputParameter(req, "refreshToken", userLocale, String.class);
 			String token = HttpUtils.parseInputParameter(req, "token", userLocale, String.class);
-			RefreshTokenResponse response = this.authService.refreshToken(token, refreshToken, userLocale);
+			RefreshTokenResponse response = this.authService.refreshToken(token, userLocale);
 			HttpUtils.setResponseBody(resp, response, ContentType.APPLICATION_JSON, HttpStatus.SC_OK);
-		} catch (AuthException e) {
+		} catch (AuthException | DuplicateLoginException e) {
 			HttpUtils.setResponseBody(resp, e.getMessage(), ContentType.TEXT_PLAIN, HttpStatus.SC_FORBIDDEN);
 		} catch (IllegalArgumentException e) {
 			HttpUtils.setResponseBody(resp, e.getMessage(), ContentType.TEXT_PLAIN, HttpStatus.SC_BAD_REQUEST);
@@ -81,7 +83,7 @@ public class AuthController {
 
 	@Mapping(route = "/signoff", requestType = RequestType.POST)
 	public void getLogoutRequest(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-		String userLocale = req.getHeader("User_Locale");
+		String userLocale = req.getHeader(USER_LOCALE_HEADER_NAME);
 		if(userLocale==null) {
 			userLocale = "EN";
 		}

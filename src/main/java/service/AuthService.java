@@ -1,5 +1,6 @@
 package main.java.service;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import application.context.annotation.Component;
@@ -37,7 +38,7 @@ public class AuthService {
 		if(!userService.userExists(user)) {
 			return false;
 		}
-		LoginRegister.removeFromRegisterIfLoggedIn(user.getUsername()).orElseThrow(()-> new DuplicateLoginException("User is not logged in"));
+		LoginRegister.removeFromRegisterIfLoggedIn(user.getUsername()).orElseThrow(()-> new LogoutException("User is not logged in"));
 		AuthContext.deauthorize(user);
 		return true;
 	}
@@ -53,8 +54,7 @@ public class AuthService {
 
 	public LoginResponse login(LoginRequest requestObj, String userLocale) {
 		String refreshToken = UUID.randomUUID().toString();
-		User user = User.builder().username(requestObj.getUsername()).password(hashService.hashStringMD5(requestObj.getPassword()))
-				.refreshToken(refreshToken).build();
+		User user = buildUserFromLoginRequest(requestObj, refreshToken);
 		boolean login = login(user);
 		if (!login) {
 			throw new AuthException(localizator.getPropertyByLocale(userLocale, "incorrectUsernameOrPassword"));
@@ -64,11 +64,20 @@ public class AuthService {
 		userService.updateToken(user, jwt);
 		userService.updateRefreshToken(user, refreshToken);
 		AuthContext.authorize(user);
+		return buildLoginResponse(jwt, refreshToken, user.getUsername());
+	}
+
+	private LoginResponse buildLoginResponse(String jwt, String refreshToken, String username) {
 		return LoginResponse.builder()
 				.refreshToken(refreshToken)
 				.token(jwt)
-				.username(user.getUsername())
+				.username(username)
 				.build();
+	}
+
+	private User buildUserFromLoginRequest(LoginRequest requestObj, String refreshToken) {
+		return User.builder().username(requestObj.getUsername()).password(hashService.hashStringMD5(requestObj.getPassword()))
+				.refreshToken(refreshToken).build();
 	}
 
 	public User register(RegisterRequest requestObj, String userLocale) {
@@ -79,28 +88,28 @@ public class AuthService {
 		throw new DuplicateUserException(localizator.getPropertyByLocale(userLocale, "userExists"));
 	}
 
-	public RefreshTokenResponse refreshToken(String token, String refreshToken, String userLocale) {
-		User user = AuthContext.getUserByToken(token);
-		if (user == null) {
-			throw new AuthException(localizator.getPropertyByLocale(userLocale, "notAuthorized"));
-		}
-		String refreshTokenOfUser = user.getRefreshToken();
-		if (refreshTokenOfUser == null || !refreshTokenOfUser.equals(refreshToken)) {
-			throw new IllegalArgumentException(localizator.getPropertyByLocale(userLocale, "refreshTokenNull"));
-		}
+	public RefreshTokenResponse refreshToken(String token, String userLocale) {
+		User user = AuthContext.getUserByToken(token).orElseThrow(()->new AuthException(localizator.getPropertyByLocale(userLocale, "notAuthorized")));
+		String refreshTokenOfUser = getRefreshTokenOfUser(user).orElseThrow(()->new IllegalArgumentException(localizator.getPropertyByLocale(userLocale, "refreshTokenNull")));
 		String newToken = tokenService.generateJwt(user);
+		LoginRegister.addToRegisterIfNotLoggedIn(user.getUsername()).orElseThrow(()-> new DuplicateLoginException("User is already logged in"));
 		user.setToken(newToken);
 		userService.updateToken(user, newToken);
+		return buildRefreshTokenResponse(newToken, refreshTokenOfUser);
+	}
+
+	private RefreshTokenResponse buildRefreshTokenResponse(String newToken, String refreshTokenOfUser) {
 		return RefreshTokenResponse.builder().refreshToken(refreshTokenOfUser)
-				.token(newToken).build();
+		.token(newToken).build();
+	}
+
+	private Optional<String> getRefreshTokenOfUser(User user) {
+		return Optional.ofNullable(user.getRefreshToken());
 	}
 
 	public void logout(LogoutRequest request) {
 		String token = request.getToken();
-		User user = AuthContext.getUserByToken(token);
-		if (user == null) {
-			throw new LogoutException("Could not logout");
-		}
+		User user = AuthContext.getUserByToken(token).orElseThrow(()->new LogoutException("Could not logout"));
 		userService.deleteToken(token);
 		logout(user);
 	}

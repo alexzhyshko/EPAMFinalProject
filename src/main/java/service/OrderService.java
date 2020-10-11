@@ -5,9 +5,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
-
-import org.apache.http.HttpStatus;
 
 import application.context.annotation.Component;
 import application.context.annotation.Inject;
@@ -51,42 +48,57 @@ public class OrderService {
 	private static final int STANDART_FEE_PER_KILOMETER = 5;
 	private static final int BASE_RIDE_PRICE = 25;
 	private static final int MINIMAL_RIDE_PRICE = 40;
-
-	public Order createOrder(String userLocale, boolean anyCategory, boolean anyCountOfCars, String authToken,
+	private static final int ELEMENTS_PER_USER_PAGE = 4;
+	private static final int ELEMENTS_PER_ADMIN_PAGE = 15;
+	
+	public Order createOrder(String userLocale, boolean anyCategory, boolean anyCountOfCars, String jwt,
 			RouteCreateRequest requestObj) {
-		String jwt = authToken.substring(7);
 		User user = userService.getUserByToken(jwt);
-		Coordinates departure = new Coordinates(requestObj.getDepartureLongitude(), requestObj.getDepartureLatitude());
-		Coordinates destination = new Coordinates(requestObj.getDestinationLongitude(),
-				requestObj.getDestinationLatitude());
-		Route routeCreated = routeService.tryGetRoute(departure, destination).orElseThrow(
+		Coordinates departureCoordinates = buildDepartureCoordinateFromDto(requestObj);
+		Coordinates destinationCoordinates = buildDestinationCoordinateFromDto(requestObj);
+		Route routeCreated = routeService.tryGetRoute(departureCoordinates, destinationCoordinates).orElseThrow(
 				() -> new NullPointerException(localizator.getPropertyByLocale(userLocale, "couldNotGetRoute")));
-		Car car = null;
+		Car car = getCarByCategoryAndPlacesCount(userLocale, requestObj, anyCategory, anyCountOfCars,
+				departureCoordinates)
+						.orElseThrow(() -> new NoSuitableCarFound(
+								localizator.getPropertyByLocale(userLocale, "couldNotFindSuitableCar")));
+		Driver driver = driverService.getDriverByCar(car);
+		Order order = tryPlaceOrder(routeCreated, user, driver, car, userLocale);
+		Coordinates carDeparture = car.getCoordinates();
+		Coordinates carDestination = departureCoordinates;
+		Route carArrivalRoute = routeService.tryGetRoute(carDeparture, carDestination).orElseThrow(
+				() -> new NullPointerException(localizator.getPropertyByLocale(userLocale, "couldNotGetRoute")));
+		carService.setCarStatus(car.getId(), 2);
+		int arrivalTime = carArrivalRoute.getTime();
+		order.setTimeToArrival(arrivalTime);
+		return order;
+	}
+
+	private Optional<Car> getCarByCategoryAndPlacesCount(String userLocale, RouteCreateRequest requestObj,
+			boolean anyCategory, boolean anyCountOfCars, Coordinates departureCoordinates) {
+		Optional<Car> car = Optional.empty();
 		try {
-			car = carService.getNearestCarByPlacesCountAndCategory(requestObj.getNumberOfPassengers(),
-					requestObj.getCarCategory(), userLocale, departure);
+			car = Optional.of(carService.getNearestCarByPlacesCountAndCategory(requestObj.getNumberOfPassengers(),
+					requestObj.getCarCategory(), userLocale, departureCoordinates));
 		} catch (Exception e) {
 			e.printStackTrace();
 			if (anyCategory) {
-				car = carService.getNearestCarByPlacesCount(requestObj.getNumberOfPassengers(), userLocale, departure);
+				car = Optional.of(carService.getNearestCarByPlacesCount(requestObj.getNumberOfPassengers(), userLocale,
+						departureCoordinates));
 			} else if (anyCountOfCars) {
 				throw new UnsupportedOperationException(
 						localizator.getPropertyByLocale(userLocale, "couldNotFindMatchCarByPlacesAndCategory"));
 			}
 		}
-		if (car == null) {
-			throw new NoSuitableCarFound(localizator.getPropertyByLocale(userLocale, "couldNotFindSuitableCar"));
-		}
-		Driver driver = driverService.getDriverByCar(car);
-		Order order = tryPlaceOrder(routeCreated, user, driver, car, userLocale);
-		Coordinates carDeparture = car.getCoordinates();
-		Coordinates carDestination = departure;
-		Route carArrivalRoute = routeService.tryGetRoute(carDeparture, carDestination).orElseThrow(
-				() -> new NullPointerException(localizator.getPropertyByLocale(userLocale, "couldNotGetRoute")));
-		carService.setCarStatus(car.getId(), 2);
-		int arrivalTime = carArrivalRoute.time;
-		order.setTimeToArrival(arrivalTime);
-		return order;
+		return car;
+	}
+
+	private Coordinates buildDestinationCoordinateFromDto(RouteCreateRequest requestObj) {
+		return new Coordinates(requestObj.getDepartureLongitude(), requestObj.getDepartureLatitude());
+	}
+
+	private Coordinates buildDepartureCoordinateFromDto(RouteCreateRequest requestObj) {
+		return new Coordinates(requestObj.getDestinationLongitude(), requestObj.getDestinationLatitude());
 	}
 
 	public Order tryPlaceOrder(Route route, User customer, Driver driver, Car car, String userLocale) {
@@ -97,140 +109,151 @@ public class OrderService {
 		return orderRepository.tryCreateOrder(route, customer, driver, car, price)
 				.orElseThrow(() -> new NullPointerException("Could not place order"));
 	}
-	
+
 	public Optional<List<RouteDetails>> getRouteDetails(RouteCreateRequest requestObj, String userLocale) {
-		List<RouteDetails> result = new ArrayList<>();
-		Coordinates departure = new Coordinates(requestObj.getDepartureLongitude(), requestObj.getDepartureLatitude());
-		Coordinates destination = new Coordinates(requestObj.getDestinationLongitude(),
-				requestObj.getDestinationLatitude());
-		Route routeCreated = routeService.tryGetRoute(departure, destination).orElseThrow(
+		Coordinates departureCoordinates = buildDepartureCoordinateFromDto(requestObj);
+		Coordinates destinationCoordinates = buildDestinationCoordinateFromDto(requestObj);
+		Route routeCreated = routeService.tryGetRoute(departureCoordinates, destinationCoordinates).orElseThrow(
 				() -> new NullPointerException(localizator.getPropertyByLocale(userLocale, "couldNotGetRoute")));
-		for (CarCategory category : CarCategory.values()) {
-			Car car = null;
-			try {
-				car = carService.getNearestCarByPlacesCountAndCategory(requestObj.getNumberOfPassengers(),
-						category.toString(), userLocale, departure);
-			} catch (NoSuitableCarFound e) {
-				continue;
-			}
-
-			if (car != null) {
-
-				Coordinates carDeparture = car.getCoordinates();
-				Coordinates carDestination = departure;
-				Route carArrivalRoute = routeService.tryGetRoute(carDeparture, carDestination)
-						.orElseThrow(() -> new NullPointerException(
-								localizator.getPropertyByLocale(userLocale, "couldNotGetRoute")));
-				RouteDetails details = RouteDetails.builder().price(getRouteRawPrice(routeCreated, car))
-						.arrivalTime(carArrivalRoute.time)
-						.categoryLocaleName(carService.getCategoryByLocale(category, userLocale)).build();
-				result.add(details);
-			}
-		}
+		List<RouteDetails> result = getNearestCarByEveryCategory(departureCoordinates, requestObj.getNumberOfPassengers(), routeCreated, userLocale);
 		if (result.isEmpty()) {
 			return Optional.empty();
 		}
 		return Optional.of(result);
 	}
 
+	private List<RouteDetails> getNearestCarByEveryCategory(Coordinates departureCoordinates, int numberOfPassengers, Route routeCreated,
+			String userLocale) {
+		List<RouteDetails> result = new ArrayList<>();
+		for (CarCategory category : CarCategory.values()) {
+			Car car = null;
+			try {
+				car = carService.getNearestCarByPlacesCountAndCategory(numberOfPassengers,
+						category.toString(), userLocale, departureCoordinates);
+			} catch (NoSuitableCarFound e) {
+				continue;
+			}
+			if (car != null) {
+				int arrivalTime = getArrivalTime(car.getCoordinates(), departureCoordinates, userLocale);
+				RouteDetails details = RouteDetails.builder().price(getRouteRawPrice(routeCreated, car))
+						.arrivalTime(arrivalTime)
+						.categoryLocaleName(carService.getCategoryByLocale(category, userLocale)).build();
+				result.add(details);
+			}
+		}
+		return result;
+	}
+
+	private int getArrivalTime(Coordinates carCoordinates, Coordinates departureCoordinates, String userLocale) {
+		Coordinates carDeparture = carCoordinates;
+		Coordinates carDestination = departureCoordinates;
+		Route carArrivalRoute = routeService.tryGetRoute(carDeparture, carDestination)
+				.orElseThrow(() -> new NullPointerException(
+						localizator.getPropertyByLocale(userLocale, "couldNotGetRoute")));
+		return carArrivalRoute.getTime();
+	}
+
 	public UserOrdersResponse getOrdersByUserId(String userLocale, String type, UUID userid, int page) {
-		int elementsPerPage = 4;
-		int totalNumberOfOrders = -1;
 		List<Order> result = null;
-		result = getNeededDataByType(type, userid, userLocale, page * elementsPerPage,
-				page * elementsPerPage + elementsPerPage);
-		totalNumberOfOrders = getNeededOrdersCountByType(type, userid, userLocale);
+		result = getNeededDataByType(type, userid, userLocale, page * ELEMENTS_PER_USER_PAGE,
+				page * ELEMENTS_PER_USER_PAGE + ELEMENTS_PER_USER_PAGE);
 		try {
-			for (Order order : result.stream().filter(e -> e.getStatusid() == 1).collect(Collectors.toList())) {
+			result.stream().filter(order -> order.getStatusid() == 1).forEach(order->{
 				Car car = order.getCar();
 				Route route = order.getRoute();
 				Coordinates carPosition = car.getCoordinates();
-				Coordinates clientDeparture = route.departure;
-				Route carArrivalRoute = routeService.tryGetRoute(carPosition, clientDeparture)
-						.orElseThrow(() -> new NullPointerException(
-								localizator.getPropertyByLocale(userLocale, "couldNotGetRoute")));
-				order.setTimeToArrival(carArrivalRoute.time);
-			}
+				Coordinates clientDeparture = route.getDeparture();
+				int arrivalTime = getArrivalTime(carPosition, clientDeparture, userLocale);
+				order.setTimeToArrival(arrivalTime);
+			});
 		} catch (NullPointerException e) {
 			throw new RouteNotCreatedException(e.getMessage());
 		}
-
-		int numberOfPages = totalNumberOfOrders / elementsPerPage;
-		if (totalNumberOfOrders % elementsPerPage != 0) {
-			numberOfPages++;
-		}
+		int numberOfPages = calculateNumberOfPagesByType(type, userid, userLocale);
 		return UserOrdersResponse.builder().numberOfPages(numberOfPages).orders(result).build();
 	}
 
-	private List<Order> getNeededDataByType(String type, UUID userid, String userLocale, int skip, int limit){
+	private int calculateNumberOfPagesByType(String type, UUID userid, String userLocale) {
+		int totalNumberOfOrders = getNeededOrdersCountByType(type, userid, userLocale);
+		int numberOfPages = totalNumberOfOrders / ELEMENTS_PER_USER_PAGE;
+		if (totalNumberOfOrders % ELEMENTS_PER_USER_PAGE != 0) {
+			numberOfPages++;
+		}
+		return numberOfPages;
+	}
+
+	private List<Order> getNeededDataByType(String type, UUID userid, String userLocale, int skip, int limit) {
 		if ("all".equals(type)) {
-			return getAllOrdersByUser(userid, userLocale, skip,
-					limit);
-		} 
+			return getAllOrdersByUser(userid, userLocale, skip, limit);
+		}
 		if ("finished".equals(type)) {
-			return getFinishedOrdersByUser(userid, userLocale, skip,
-					limit);
-		} 
+			return getFinishedOrdersByUser(userid, userLocale, skip, limit);
+		}
 		if ("active".equals(type)) {
-			return getActiveOrdersByUser(userid, userLocale, skip,
-					limit);
+			return getActiveOrdersByUser(userid, userLocale, skip, limit);
 		}
 		throw new IncorrectParameterException(localizator.getPropertyByLocale(userLocale, "incorrectPathVariable"));
 	}
 
-	private int getNeededOrdersCountByType(String type, UUID userid, String userLocale){
+	private int getNeededOrdersCountByType(String type, UUID userid, String userLocale) {
 		if ("all".equals(type)) {
 			return getTotalOrderCountByUser(userid);
-		} 
+		}
 		if ("finished".equals(type)) {
 			return getFinishedOrderCountByUser(userid);
-		} 
+		}
 		if ("active".equals(type)) {
 			return getActiveOrderCountByUser(userid);
 		}
 		throw new IncorrectParameterException(localizator.getPropertyByLocale(userLocale, "incorrectPathVariable"));
 	}
-	
-	public Optional<UserOrdersResponse> getAllOrdersSortedFiltered(PaginationFilteringSortingDTO dto, String userLocale) {
-		int elementsPerPage = 15;
-		List<Order> allOrders;
-		if (dto.isFilter()) {
-			allOrders = getAllOrdersFiltered(userLocale, dto.getFilterBy(), dto.getValue(), dto.getPage() * elementsPerPage,
-					dto.getPage() * elementsPerPage + elementsPerPage);
-		} else {
-			allOrders = getAllOrders(userLocale, dto.getPage() * elementsPerPage,
-					dto.getPage() * elementsPerPage + elementsPerPage);
-		}
-		int totalNumberOfOrders = getTotalOrderCount(dto.getFilterBy(), dto.getValue());
-		if (totalNumberOfOrders == 0) {
+
+	public Optional<UserOrdersResponse> getAllOrdersSortedFiltered(PaginationFilteringSortingDTO dto,
+			String userLocale) {
+		List<Order> allOrders = getOrdersByFilterPaginated(dto, userLocale);
+		int numberOfPages = calculatePageCount(dto.getFilterBy(), dto.getValue());
+		if (numberOfPages == 0) {
 			return Optional.empty();
 		}
 		if (dto.isSort()) {
-			Comparator<Order> comparator = null;
-			if ("dateOfOrder".equals(dto.getSortBy())) {
-				comparator = (order1, order2) -> order1.getDateOfOrder().compareTo(order2.getDateOfOrder());
-			} else if ("price".equals(dto.getSortBy())) {
-				comparator = (order1, order2) -> Float.compare(order1.getPrice(), order2.getPrice());
-			} else {
-				throw new IllegalArgumentException(localizator.getPropertyByLocale(userLocale, "notSupportedSortOption"));
-			}
-
+			Comparator<Order> comparator = getComparatorBySortType(dto.getSortBy(), userLocale);
 			allOrders.sort(dto.getOrder().equalsIgnoreCase("asc") ? comparator : comparator.reversed());
 		}
-		int numberOfPages = totalNumberOfOrders / elementsPerPage;
-		if (totalNumberOfOrders % elementsPerPage != 0) {
+		return Optional.of(UserOrdersResponse.builder().numberOfPages(numberOfPages).orders(allOrders).build());
+
+	}
+
+	private List<Order> getOrdersByFilterPaginated(PaginationFilteringSortingDTO dto, String userLocale) {
+		int skip = dto.getPage() * ELEMENTS_PER_ADMIN_PAGE;
+		int limit = dto.getPage() * ELEMENTS_PER_ADMIN_PAGE + ELEMENTS_PER_ADMIN_PAGE;
+		if (dto.isFilter()) {
+			return getAllOrdersFiltered(userLocale, dto.getFilterBy(), dto.getValue(), skip, limit);
+		} else {
+			return getAllOrders(userLocale, skip, limit);
+		}
+	}
+
+	private Comparator<Order> getComparatorBySortType(String sortBy, String userLocale) {
+		if ("dateOfOrder".equals(sortBy)) {
+			return (order1, order2) -> order1.getDateOfOrder().compareTo(order2.getDateOfOrder());
+		} else if ("price".equals(sortBy)) {
+			return (order1, order2) -> Float.compare(order1.getPrice(), order2.getPrice());
+		} else
+			throw new IllegalArgumentException(
+					localizator.getPropertyByLocale(userLocale, "notSupportedSortOption"));
+	}
+
+	private int calculatePageCount(String filterBy, String value) {
+		int totalNumberOfOrders = getTotalOrderCount(filterBy, value);
+		int numberOfPages = totalNumberOfOrders / ELEMENTS_PER_ADMIN_PAGE;
+		if (totalNumberOfOrders % ELEMENTS_PER_ADMIN_PAGE != 0) {
 			numberOfPages++;
 		}
-		return Optional.of(UserOrdersResponse.builder()
-				.numberOfPages(numberOfPages)
-				.orders(allOrders)
-				.build());
-		
-		
+		return numberOfPages;
 	}
 
 	private int getRouteRawPrice(Route route, Car car) {
-		int price = Math.round(route.distance * car.getPriceMultiplier() * STANDART_FEE_PER_KILOMETER)
+		int price = Math.round(route.getDistance() * car.getPriceMultiplier() * STANDART_FEE_PER_KILOMETER)
 				+ BASE_RIDE_PRICE;
 		return price < MINIMAL_RIDE_PRICE ? MINIMAL_RIDE_PRICE : price;
 	}
@@ -294,8 +317,4 @@ public class OrderService {
 				.orElseThrow(() -> new NullPointerException("Could not get total order count"));
 	}
 
-	
-
-	
-	
 }

@@ -9,7 +9,7 @@ public class DefaultFilterChecks {
 	
 	private static List<String> exceptions = Arrays.asList("/login", "/register", "/refreshToken", "/signoff");
 	
-	private static String adminPaths = "/admin";
+	private static final String ADMIN_PATH = "/admin";
 	
 	/**
 	 * Checks is the path given matches filter exceptions
@@ -22,7 +22,7 @@ public class DefaultFilterChecks {
 	 * Checks if input path matches the only-admin-accessible resources path
 	 */
 	public static boolean checkOnlyAdminResourcesPath(String path) {
-		return path.startsWith(adminPaths);
+		return path.startsWith(ADMIN_PATH);
 	}
 	
 }

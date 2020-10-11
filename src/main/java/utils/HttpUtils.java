@@ -36,7 +36,7 @@ public class HttpUtils {
 
 	public static <T> boolean setResponseBody(HttpServletResponse resp, T payload, ContentType contentType, int responseStatus) {
 		try {
-			resp.setContentType(contentType.toString());
+			resp.setContentType(contentType.toString()+";charset=UTF-8");
 			resp.setStatus(responseStatus);
 			resp.getWriter().append(gson.toJson(payload)).flush();
 			return true;
@@ -45,7 +45,7 @@ public class HttpUtils {
 		}
 	}
 
-	public static synchronized <T> T parseInputParameter(HttpServletRequest req, String parameterName, String userLocale, Class<T> type) {
+	public static <T> T parseInputParameter(HttpServletRequest req, String parameterName, String userLocale, Class<T> type) {
 		try {
 			if(type==String.class) {
 				return (T)req.getParameter(parameterName);
@@ -61,6 +61,10 @@ public class HttpUtils {
 			e.printStackTrace();
 			throw new IllegalArgumentException(localizator.getPropertyByLocale(userLocale, "incorrectParameter"));
 		}
+	}
+	
+	public static String parseAuthHeader(HttpServletRequest req) {
+		return req.getHeader("Authorization").substring(7);
 	}
 	
 }

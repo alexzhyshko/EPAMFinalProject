@@ -53,7 +53,7 @@ public class AuthenticationFilter implements Filter {
 
 		// check if the auth header exists
 		String authTokenHeader = httpReq.getHeader("Authorization");
-		if (authTokenHeader == null || authTokenHeader.isEmpty()) {
+		if (!checkAuthTokenHeaderValidity(authTokenHeader)) {
 			httpRes.setStatus(403);
 			httpRes.getWriter().append("Forbidden").flush();
 			return;
@@ -83,6 +83,10 @@ public class AuthenticationFilter implements Filter {
 		// else throw 403 Forbidden
 		httpRes.setStatus(403);
 		httpRes.getWriter().append("Forbidden").flush();
+	}
+	
+	private boolean checkAuthTokenHeaderValidity(String header) {
+		return header != null && !header.isEmpty();
 	}
 
 	@Override

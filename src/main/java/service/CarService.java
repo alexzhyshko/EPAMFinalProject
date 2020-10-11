@@ -1,6 +1,7 @@
 package main.java.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import application.context.annotation.Component;
 import application.context.annotation.Inject;
@@ -16,6 +17,8 @@ public class CarService {
 	@Inject
 	private CarRepository carRepository;
 
+	private static final int MAX_DISTANCE_CONSTRAINT_KM = 100;
+	
 	public List<Car> getAllAvailableCars(String userLocale){
 		return carRepository.getAllActiveCars(userLocale);
 	}
@@ -24,54 +27,41 @@ public class CarService {
 			Coordinates clientCoord) {
 		List<Car> allSuitableCars = carRepository.getAllCarsByPlacesCountAndCategory(placesCount, carCategory,
 				userLocale);
-		Car result = null;
-		double minDistance = Double.MAX_VALUE;
-		for (Car car : allSuitableCars) {
-			// calculate distance between client and car
-			double distance = distanceInKmBetweenEarthCoordinates(Double.parseDouble(car.getCoordinates().getLatitude()),
-					Double.parseDouble(car.getCoordinates().getLongitude()), Double.parseDouble(clientCoord.getLatitude()),
-					Double.parseDouble(clientCoord.getLongitude()));
-			if (distance < minDistance) {
-				minDistance = distance;
-				result = car;
-			}
-		}
-		if(result == null) {
-			throw new NoSuitableCarFound(
-					"No cars found for " + placesCount + " places and category " + carCategory);
-		}
-		if (minDistance > 100) {
-			throw new NoSuitableCarFound(
-					"No cars found for " + placesCount + " places and category " + carCategory + " within 100 km");
-		}
-		return result;
+		return getNearestCarToClientAccountingDistanceConstraint(placesCount, allSuitableCars, clientCoord);
 	}
-
 
 	public Car getNearestCarByPlacesCount(int placesCount, String userLocale, Coordinates clientCoord) {
 		List<Car> allSuitableCars = carRepository.getAllCarsByPlacesCount(placesCount,
 				userLocale);
-		Car result = null;
-		double minDistance = Double.MAX_VALUE;
-		for (Car car : allSuitableCars) {
-			// calculate distance between client and car
-			double distance = distanceInKmBetweenEarthCoordinates(Double.parseDouble(car.getCoordinates().getLatitude()),
-					Double.parseDouble(car.getCoordinates().getLongitude()), Double.parseDouble(clientCoord.getLatitude()),
-					Double.parseDouble(clientCoord.getLongitude()));
-			if (distance < minDistance) {
-				minDistance = distance;
-				result = car;
-			}
-		}
-		if(result == null) {
+		return getNearestCarToClientAccountingDistanceConstraint(placesCount, allSuitableCars, clientCoord);
+	}
+
+
+	private Car getNearestCarToClientAccountingDistanceConstraint(int placesCount, List<Car> allSuitableCars, Coordinates clientCoord) {
+		Car result = getNearestCarToClient(allSuitableCars, clientCoord).orElseThrow(()->new NoSuitableCarFound("No cars found for " + placesCount + " places"));
+		if (calculateDistanceBetweenClientAndCar(clientCoord, result) > MAX_DISTANCE_CONSTRAINT_KM) {
 			throw new NoSuitableCarFound(
-					"No cars found for " + placesCount + " places");
-		}
-		if (minDistance > 100) {
-			throw new NoSuitableCarFound(
-					"No cars found for " + placesCount + " places within 100 km");
+					"No cars found for " + placesCount + " places within "+MAX_DISTANCE_CONSTRAINT_KM+" km");
 		}
 		return result;
+	}
+	private Optional<Car> getNearestCarToClient(List<Car> allSuitableCars, Coordinates clientCoord) {
+		Optional<Car> result = Optional.empty();
+		double minDistance = Double.MAX_VALUE;
+		for (Car car : allSuitableCars) {
+			double distance = calculateDistanceBetweenClientAndCar(clientCoord, car);
+			if (distance < minDistance) {
+				minDistance = distance;
+				result = Optional.of(car);
+			}
+		}
+		return result;
+	}
+
+	private double calculateDistanceBetweenClientAndCar(Coordinates clientCoord, Car car) {
+		return distanceInKmBetweenEarthCoordinates(Double.parseDouble(car.getCoordinates().getLatitude()),
+				Double.parseDouble(car.getCoordinates().getLongitude()), Double.parseDouble(clientCoord.getLatitude()),
+				Double.parseDouble(clientCoord.getLongitude()));
 	}
 
 	public Car getCarByOrderId(int orderId, String userLocale) {

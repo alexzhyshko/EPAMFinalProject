@@ -28,7 +28,6 @@ public class DBConnectionManager {
 	}
 
 	public static Connection getConnection() {
-		Connection conn;
 		try {
 			return ds.getConnection();
 		} catch (SQLException e) {

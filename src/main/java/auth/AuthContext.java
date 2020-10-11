@@ -1,6 +1,7 @@
 package main.java.auth;
 
 import java.util.HashMap;
+import java.util.Optional;
 
 import application.context.annotation.Component;
 import application.context.annotation.Inject;
@@ -55,15 +56,15 @@ public class AuthContext {
 		authorizedUsers.remove(user.getUsername());
 	}
 	
-	public static User getUserByToken(String token) {
-		User result = null;
+	public static Optional<User> getUserByToken(String token) {
+		Optional<User> result = Optional.empty();
 		for(User user : authorizedUsers.values()) {
 			if(user.getToken()==null && user.getToken().equals(token)) {
-				result = user;
+				result = Optional.of(user);
 			}
 		}
-		if(result==null) {
-			result = userService.getUserByToken(token);
+		if(result.isEmpty()) {
+			result = Optional.of(userService.getUserByToken(token));
 		}
 		return result;
 	}

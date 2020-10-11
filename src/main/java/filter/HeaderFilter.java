@@ -16,6 +16,7 @@ public class HeaderFilter implements Filter {
 	private FilterConfig config = null;
 	private boolean active = false;
 
+	@Override
 	public void init(FilterConfig fConfig) throws ServletException {
 		this.config = fConfig;
 		String act = config.getInitParameter("active");

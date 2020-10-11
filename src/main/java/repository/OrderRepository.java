@@ -46,9 +46,9 @@ public class OrderRepository {
 
 	public Optional<Order> tryCreateOrder(Route route, User customer, Driver driver, Car car, float price) {
 		Connection connection = getNewConnection();
-		int departureCoordId = coordinateRepository.insertCoordinatesAndReturnId(route.departure)
+		int departureCoordId = coordinateRepository.insertCoordinatesAndReturnId(route.getDeparture())
 				.orElseThrow(NullPointerException::new);
-		int destinationCoordId = coordinateRepository.insertCoordinatesAndReturnId(route.destination)
+		int destinationCoordId = coordinateRepository.insertCoordinatesAndReturnId(route.getDestination())
 				.orElseThrow(NullPointerException::new);
 		String query = "INSERT INTO Orders(driving_id, user_id, departure_coordinate_id, destination_coordinate_id, price, distance, timeOccupancy, dateOfOrder, status_id) VALUES((SELECT id FROM Driving WHERE driver_id=? AND car_id=?), ?, ?, ?, ?, ?, ?, NOW(), 1)";
 		try (PreparedStatement ps = connection.prepareStatement(query)) {
@@ -58,8 +58,8 @@ public class OrderRepository {
 			ps.setInt(4, departureCoordId);
 			ps.setInt(5, destinationCoordId);
 			ps.setFloat(6, price);
-			ps.setFloat(7, route.distance);
-			ps.setInt(8, route.time);
+			ps.setFloat(7, route.getDistance());
+			ps.setInt(8, route.getTime());
 			ps.executeUpdate();
 			connection.commit();
 		} catch (Exception e) {
@@ -168,15 +168,17 @@ public class OrderRepository {
 			getOrderIds.setInt(4, limit - skip);
 			try (ResultSet rs = getOrderIds.executeQuery()) {
 				while (rs.next()) {
-					Route route = new Route();
-					route.distance = rs.getFloat("orderDistance");
-					route.time = rs.getInt("orderTime");
+					
 					Coordinates routeDeparture = new Coordinates(rs.getString("orderDepartLng"),
 							rs.getString("orderDepartLat"));
 					Coordinates routeDestination = new Coordinates(rs.getString("orderDestLng"),
 							rs.getString("orderDestLat"));
-					route.departure = routeDeparture;
-					route.destination = routeDestination;
+					Route route = Route.builder()
+							.distance(rs.getFloat("orderDistance"))
+							.time(rs.getInt("orderTime"))
+							.departure(routeDeparture)
+							.destination(routeDestination)
+							.build();
 					User user = User.builder().id(UUID.fromString(rs.getString("userId")))
 							.username(rs.getString("username")).name(rs.getString("userName"))
 							.surname(rs.getString("userSurname")).rating(rs.getFloat("userRating"))
@@ -246,15 +248,16 @@ public class OrderRepository {
 			getOrderIds.setInt(1, orderId);
 			try (ResultSet rs = getOrderIds.executeQuery()) {
 				while (rs.next()) {
-					Route route = new Route();
-					route.distance = rs.getFloat("orderDistance");
-					route.time = rs.getInt("orderTime");
 					Coordinates routeDeparture = new Coordinates(rs.getString("orderDepartLng"),
 							rs.getString("orderDepartLat"));
 					Coordinates routeDestination = new Coordinates(rs.getString("orderDestLng"),
 							rs.getString("orderDestLat"));
-					route.departure = routeDeparture;
-					route.destination = routeDestination;
+					Route route = Route.builder()
+							.distance(rs.getFloat("orderDistance"))
+							.time(rs.getInt("orderTime"))
+							.departure(routeDeparture)
+							.destination(routeDestination)
+							.build();
 					User user = User.builder().id(UUID.fromString(rs.getString("userId")))
 							.username(rs.getString("username")).name(rs.getString("userName"))
 							.surname(rs.getString("userSurname")).rating(rs.getFloat("userRating"))
@@ -340,15 +343,16 @@ public class OrderRepository {
 			getOrderIds.setInt(startParameterIndex + 2, limit - skip);
 			try (ResultSet rs = getOrderIds.executeQuery()) {
 				while (rs.next()) {
-					Route route = new Route();
-					route.distance = rs.getFloat("orderDistance");
-					route.time = rs.getInt("orderTime");
 					Coordinates routeDeparture = new Coordinates(rs.getString("orderDepartLng"),
 							rs.getString("orderDepartLat"));
 					Coordinates routeDestination = new Coordinates(rs.getString("orderDestLng"),
 							rs.getString("orderDestLat"));
-					route.departure = routeDeparture;
-					route.destination = routeDestination;
+					Route route = Route.builder()
+							.distance(rs.getFloat("orderDistance"))
+							.time(rs.getInt("orderTime"))
+							.departure(routeDeparture)
+							.destination(routeDestination)
+							.build();
 					User user = User.builder().id(UUID.fromString(rs.getString("userId")))
 							.username(rs.getString("username")).name(rs.getString("userName"))
 							.surname(rs.getString("userSurname")).rating(rs.getFloat("userRating"))
