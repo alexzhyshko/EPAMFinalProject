@@ -3,26 +3,26 @@ package main.java.controller;
 import java.util.List;
 import java.util.UUID;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.http.HttpStatus;
 import org.apache.http.entity.ContentType;
 
-import application.context.annotation.Component;
-import application.context.annotation.Inject;
-import application.context.annotation.Mapping;
-import application.context.annotation.RestController;
+import application.context.annotation.component.Component;
+import application.context.annotation.component.RestController;
+import application.context.annotation.inject.Inject;
+import application.context.annotation.mapping.Mapping;
+import application.context.annotation.mapping.RequestBody;
+import application.context.annotation.mapping.RequestHeader;
+import application.context.annotation.mapping.RequestParameter;
 import application.context.annotation.mapping.RequestType;
+import application.entity.ResponseEntity;
+import application.utils.HttpUtils;
 import main.java.dto.request.RouteCreateRequest;
 import main.java.dto.response.RouteDetails;
 import main.java.dto.response.UserOrdersResponse;
 import main.java.entity.Order;
-import main.java.exception.CouldNotParseBodyException;
 import main.java.exception.NoSuitableCarFound;
 import main.java.service.LocalizationService;
 import main.java.service.OrderService;
-import main.java.utils.HttpUtils;
 
 @Component
 @RestController
@@ -34,76 +34,66 @@ public class OrderController {
 	@Inject
 	private LocalizationService localizator;
 
-	
+	private static final String USER_LOCALE_HEADER_NAME="User_Locale";
 
 	@Mapping(route = "/order/create:arg:arg", requestType = RequestType.POST)
-	public void onOrderCreateRequestReceived(HttpServletRequest req, HttpServletResponse resp){
-		String userLocale = req.getHeader("User_Locale");
-		String jwt = HttpUtils.parseAuthHeader(req);
+	public ResponseEntity<Object> onOrderCreateRequestReceived(@RequestBody RouteCreateRequest requestObj,
+			@RequestParameter("anyCategory") Boolean anyCategory,
+			@RequestParameter("anyCategory") Boolean anyCountOfCars,
+			@RequestHeader(USER_LOCALE_HEADER_NAME) String userLocale){
+		String jwt = HttpUtils.parseAuthHeader(userLocale);
 		try {
-			boolean anyCategory = HttpUtils.parseInputParameter(req, "anyCategory", userLocale, Boolean.class);
-			boolean anyCountOfCars = HttpUtils.parseInputParameter(req, "anyCountOfCars", userLocale, Boolean.class);
-			RouteCreateRequest requestObj = HttpUtils.parseBody(req, RouteCreateRequest.class)
-					.orElseThrow(() -> new CouldNotParseBodyException("Could not parse body"));
 			Order order = this.orderService.createOrder(userLocale, anyCategory, anyCountOfCars, jwt,
 					requestObj);
-			HttpUtils.setResponseBody(resp, order, ContentType.APPLICATION_JSON, HttpStatus.SC_OK);
+			return new ResponseEntity<>(order, HttpStatus.SC_OK, ContentType.APPLICATION_JSON);
 		} catch (Exception e) {
-			HttpUtils.setResponseBody(resp, e.getMessage(), ContentType.TEXT_PLAIN, HttpStatus.SC_BAD_REQUEST);
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.SC_BAD_REQUEST, ContentType.TEXT_PLAIN);
 		}
 	}
 
 	@Mapping(route = "/order/getRouteDetails", requestType = RequestType.POST)
-	public void getRouteDetails(HttpServletRequest req, HttpServletResponse resp){
-		String userLocale = req.getHeader("User_Locale");
+	public ResponseEntity<Object> getRouteDetails(@RequestBody RouteCreateRequest requestObj,
+			@RequestHeader(USER_LOCALE_HEADER_NAME) String userLocale){
 		try {
-			RouteCreateRequest requestObj = HttpUtils.parseBody(req, RouteCreateRequest.class)
-					.orElseThrow(() -> new CouldNotParseBodyException("Could not parse body"));
 			List<RouteDetails> routeDetails = this.orderService.getRouteDetails(requestObj, userLocale)
 					.orElseThrow(() -> new NoSuitableCarFound(
 							localizator.getPropertyByLocale(userLocale, "couldNotFindMatchCarByPlaces")));
-			HttpUtils.setResponseBody(resp, routeDetails, ContentType.APPLICATION_JSON, HttpStatus.SC_OK);
+			return new ResponseEntity<>(routeDetails, HttpStatus.SC_OK, ContentType.APPLICATION_JSON);
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
-			HttpUtils.setResponseBody(resp, e.getMessage(), ContentType.TEXT_PLAIN, HttpStatus.SC_NOT_FOUND);
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.SC_NOT_FOUND, ContentType.TEXT_PLAIN);
 		}
 	}
 
 	@Mapping(route = "/order/get/byUserId:arg:arg:arg", requestType = RequestType.GET)
-	public void getOrdersByUserId(HttpServletRequest req, HttpServletResponse resp){
-		String userLocale = req.getHeader("User_Locale");
-		String type = HttpUtils.parseInputParameter(req, "type", userLocale, String.class);
-		UUID userid = HttpUtils.parseInputParameter(req, "userId", userLocale, UUID.class);
-		int page = HttpUtils.parseInputParameter(req, "page", userLocale, Integer.class);
+	public ResponseEntity<Object> getOrdersByUserId(@RequestParameter("type") String type,
+			@RequestParameter("userid") UUID userid,
+			@RequestParameter("page") Integer page,
+			@RequestHeader(USER_LOCALE_HEADER_NAME) String userLocale){
 		try {
 			UserOrdersResponse response = this.orderService.getOrdersByUserId(userLocale, type, userid, page);
-			HttpUtils.setResponseBody(resp, response, ContentType.APPLICATION_JSON, HttpStatus.SC_OK);
+			return new ResponseEntity<>(response, HttpStatus.SC_OK, ContentType.APPLICATION_JSON);
 		} catch (Exception e) {
-			HttpUtils.setResponseBody(resp, e.getMessage(), ContentType.TEXT_PLAIN, HttpStatus.SC_NOT_FOUND);
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.SC_NOT_FOUND, ContentType.TEXT_PLAIN);
 		}
 	}
 
 	@Mapping(route = "/order/get/byId:arg", requestType = RequestType.GET)
-	public void getOrderById(HttpServletRequest req, HttpServletResponse resp){
-		String userLocale = req.getHeader("User_Locale");
+	public ResponseEntity<Object> getOrderById(@RequestParameter("orderId") Integer orderId,
+			@RequestHeader(USER_LOCALE_HEADER_NAME) String userLocale){
 		try {
-			int orderId = HttpUtils.parseInputParameter(req, "orderId", userLocale, Integer.class);
-			HttpUtils.setResponseBody(resp, orderService.getOrderById(orderId, userLocale), ContentType.APPLICATION_JSON, HttpStatus.SC_OK);
+			return new ResponseEntity<>(orderService.getOrderById(orderId, userLocale), HttpStatus.SC_OK, ContentType.APPLICATION_JSON);
 		} catch (NullPointerException e) {
-			HttpUtils.setResponseBody(resp, e.getMessage(), ContentType.TEXT_PLAIN, HttpStatus.SC_NOT_FOUND);
-		} catch (IllegalArgumentException e) {
-			HttpUtils.setResponseBody(resp, e.getMessage(), ContentType.TEXT_PLAIN, HttpStatus.SC_BAD_REQUEST);
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.SC_NOT_FOUND, ContentType.TEXT_PLAIN);
 		}
 		
 	}
 
 	@Mapping(route = "/order/finish:arg", requestType = RequestType.GET)
-	public void onOrderFinishRequestREceived(HttpServletRequest req, HttpServletResponse resp){
-		String userLocale = req.getHeader("User_Locale");
-		int orderId = HttpUtils.parseInputParameter(req, "orderId", userLocale, Integer.class);
+	public ResponseEntity<Object> onOrderFinishRequestREceived(@RequestParameter("orderId") Integer orderId,
+			@RequestHeader(USER_LOCALE_HEADER_NAME) String userLocale){
 		if(orderService.finishOrder(orderId, userLocale)) 
-			HttpUtils.setResponseBody(resp, localizator.getPropertyByLocale(userLocale, "orderFinished"), ContentType.TEXT_PLAIN, HttpStatus.SC_OK);
-		HttpUtils.setResponseBody(resp, localizator.getPropertyByLocale(userLocale, "errorFinishingOrder"), ContentType.TEXT_PLAIN, HttpStatus.SC_INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<>(localizator.getPropertyByLocale(userLocale, "orderFinished"), HttpStatus.SC_OK, ContentType.APPLICATION_JSON);
+		return new ResponseEntity<>(localizator.getPropertyByLocale(userLocale, "errorFinishingOrder"), HttpStatus.SC_INTERNAL_SERVER_ERROR, ContentType.TEXT_PLAIN);
 	}
 
 }

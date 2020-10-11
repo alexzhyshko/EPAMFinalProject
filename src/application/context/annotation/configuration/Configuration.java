@@ -1,4 +1,4 @@
-package application.context.annotation;
+package application.context.annotation.configuration;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.TYPE;
@@ -9,6 +9,6 @@ import java.lang.annotation.Target;
 
 @Retention(RUNTIME)
 @Target({ TYPE, FIELD })
-public @interface Prototype {
+public @interface Configuration {
 
 }

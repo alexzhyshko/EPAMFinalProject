@@ -1,7 +1,7 @@
 package main.java.service;
 
-import application.context.annotation.Component;
-import application.context.annotation.Inject;
+import application.context.annotation.component.Component;
+import application.context.annotation.inject.Inject;
 import main.java.entity.Car;
 import main.java.entity.Driver;
 import main.java.repository.DriverRepository;

@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import application.context.annotation.Component;
-import application.context.annotation.Inject;
+import application.context.annotation.component.Component;
+import application.context.annotation.inject.Inject;
 import main.java.dto.PaginationFilteringSortingDTO;
 import main.java.dto.request.RouteCreateRequest;
 import main.java.dto.response.RouteDetails;

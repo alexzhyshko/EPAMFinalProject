@@ -3,8 +3,8 @@ package main.java.service;
 import java.util.Optional;
 import java.util.UUID;
 
-import application.context.annotation.Component;
-import application.context.annotation.Inject;
+import application.context.annotation.component.Component;
+import application.context.annotation.inject.Inject;
 import main.java.auth.AuthContext;
 import main.java.dto.request.LoginRequest;
 import main.java.dto.request.LogoutRequest;

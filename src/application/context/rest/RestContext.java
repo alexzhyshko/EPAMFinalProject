@@ -4,9 +4,9 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-import application.context.annotation.Component;
-import application.context.annotation.Inject;
-import application.context.annotation.Mapping;
+import application.context.annotation.component.Component;
+import application.context.annotation.inject.Inject;
+import application.context.annotation.mapping.Mapping;
 import application.context.annotation.mapping.RequestType;
 import application.routing.Router;
 
@@ -31,16 +31,16 @@ public class RestContext {
 					RequestType type = annotation.requestType();	
 					switch(type) {
 					case GET:
-						router.get(route, rest, method.getName());
+						router.get(route, rest, method);
 						break;
 					case POST:
-						router.post(route, rest, method.getName());
+						router.post(route, rest, method);
 						break;
 					case PUT:
-						router.put(route, rest, method.getName());
+						router.put(route, rest, method);
 						break;
 					case DELETE:
-						router.delete(route, rest, method.getName());
+						router.delete(route, rest, method);
 						break;
 					}
 				}

@@ -3,8 +3,8 @@ package main.java.service;
 import java.util.List;
 import java.util.Optional;
 
-import application.context.annotation.Component;
-import application.context.annotation.Inject;
+import application.context.annotation.component.Component;
+import application.context.annotation.inject.Inject;
 import main.java.entity.Car;
 import main.java.entity.CarCategory;
 import main.java.entity.Coordinates;

@@ -1,20 +1,17 @@
 package main.java.controller;
 
-import java.io.IOException;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.http.HttpStatus;
+import org.apache.http.entity.ContentType;
 
-import com.google.gson.Gson;
-
-import application.context.annotation.Component;
-import application.context.annotation.Inject;
-import application.context.annotation.Mapping;
-import application.context.annotation.RestController;
+import application.context.annotation.component.Component;
+import application.context.annotation.component.RestController;
+import application.context.annotation.inject.Inject;
+import application.context.annotation.mapping.Mapping;
+import application.context.annotation.mapping.RequestHeader;
 import application.context.annotation.mapping.RequestType;
+import application.entity.ResponseEntity;
 import main.java.entity.Car;
 import main.java.service.CarService;
 
@@ -22,18 +19,15 @@ import main.java.service.CarService;
 @RestController
 public class CarController {
 
-	private Gson gson = new Gson();
+	private static final String USER_LOCALE_HEADER_NAME="User_Locale";
 	
 	@Inject
 	CarService carService;
 	
 	@Mapping(route = "/car/getAll", requestType = RequestType.GET)
-	public void getAllCars(HttpServletRequest req, HttpServletResponse resp) throws IOException  {
-		String userLocale = req.getHeader("User_Locale");
+	public ResponseEntity<Object> getAllCars(@RequestHeader(USER_LOCALE_HEADER_NAME) String userLocale){
 		List<Car> allCars = carService.getAllAvailableCars(userLocale);
-		resp.setContentType("text/json");
-		resp.setStatus(HttpStatus.SC_OK);
-		resp.getWriter().append(gson.toJson(allCars)).flush();
+		return new ResponseEntity<>(allCars, HttpStatus.SC_OK, ContentType.APPLICATION_JSON);
 	}
 	
 }

@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import application.context.annotation.Component;
+import application.context.annotation.component.Component;
 import application.context.scanner.Scanner;
 
 @Component

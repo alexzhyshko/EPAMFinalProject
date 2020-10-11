@@ -12,7 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import application.context.ApplicationContext;
-import application.context.annotation.Component;
+import application.context.annotation.component.Component;
 import io.jsonwebtoken.ExpiredJwtException;
 import main.java.auth.AuthContext;
 import main.java.service.TokenService;

@@ -3,7 +3,7 @@ package application.context.reader;
 import java.io.IOException;
 import java.util.Properties;
 
-import application.context.annotation.Component;
+import application.context.annotation.component.Component;
 
 @Component
 public class PropertyReader {

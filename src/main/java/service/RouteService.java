@@ -18,7 +18,7 @@ import org.apache.http.util.EntityUtils;
 
 import com.google.gson.Gson;
 
-import application.context.annotation.Component;
+import application.context.annotation.component.Component;
 import application.context.reader.PropertyReader;
 import main.java.dto.response.routes.ApiRoute;
 import main.java.dto.response.routes.RoutesApiResponse;

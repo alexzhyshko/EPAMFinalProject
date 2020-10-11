@@ -9,7 +9,7 @@ import javax.naming.NamingException;
 
 import org.apache.tomcat.dbcp.dbcp2.BasicDataSource;
 
-import application.context.annotation.Component;
+import application.context.annotation.component.Component;
 
 @Component
 public class DBConnectionManager {

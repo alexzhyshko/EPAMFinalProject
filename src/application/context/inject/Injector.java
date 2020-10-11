@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 
 import application.context.ApplicationContext;
-import application.context.annotation.Inject;
+import application.context.annotation.inject.Inject;
 
 public class Injector {
 

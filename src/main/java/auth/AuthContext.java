@@ -3,8 +3,8 @@ package main.java.auth;
 import java.util.HashMap;
 import java.util.Optional;
 
-import application.context.annotation.Component;
-import application.context.annotation.Inject;
+import application.context.annotation.component.Component;
+import application.context.annotation.inject.Inject;
 import io.jsonwebtoken.ExpiredJwtException;
 import main.java.entity.User;
 import main.java.jwt.JwtParser;
