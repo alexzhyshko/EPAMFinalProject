@@ -27,9 +27,13 @@ public class Injector {
 						if (injectingObject == null) {
 							injectingObject = ApplicationContext.getPrototypeComponent(field.getType());
 						}
-						if (injectingObject == null) {
-							throw new NullPointerException("Component for type " + field.getType()
-									+ " not found in Application Context. Couldn't inject into " + clazz.getName());
+						if( injectingObject == null) {
+							String explicitClassname = field.getDeclaredAnnotation(Inject.class).value();
+							injectingObject = ApplicationContext.findSingletonByName(explicitClassname);
+							if (injectingObject == null) {
+								throw new NullPointerException("Component for type " + field.getType()
+										+ " not found in Application Context. Couldn't inject into " + clazz.getName());
+							}
 						}
 						field.setAccessible(true);
 						field.set(entry.getValue(), injectingObject);
@@ -39,7 +43,7 @@ public class Injector {
 			}
 		} catch (IllegalArgumentException | IllegalAccessException | InstantiationException | InvocationTargetException
 				| NoSuchMethodException e) {
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 		}
 		logger.info("DI successfully finished");
 	}

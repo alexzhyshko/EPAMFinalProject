@@ -1,6 +1,7 @@
 package main.java.service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import application.context.annotation.component.Component;
@@ -12,8 +13,8 @@ import main.java.repository.UserRepository;
 @Component
 public class UserService {
 
-	@Inject
-	private UserRepository userRepository;
+	@Inject("UserRepositoryImpl")
+	public UserRepository userRepository;
 
 	public void updateToken(User user, String newToken) {
 		userRepository.updateTokenByUsername(user.getUsername(), newToken);
@@ -32,12 +33,12 @@ public class UserService {
 		return userRepository.tryCreateUser(user);
 	}
 
-	public User getUserByUsernameOrNull(String username) {
-		return userRepository.getUserByUsernameOrNull(username);
+	public Optional<User> getUserByUsername(String username) {
+		return userRepository.getUserByUsername(username);
 	}
 
 	public boolean userExists(User user) {
-		return getUserByUsernameOrNull(user.getUsername()) != null;
+		return !getUserByUsername(user.getUsername()).isEmpty();
 	}
 
 	public boolean userExistsWithPasswordEquals(User user) {
@@ -55,7 +56,7 @@ public class UserService {
 	}
 
 	public User getUserById(UUID id) {
-		return userRepository.getUserByID(id).orElseThrow(()->new NullPointerException("No user found by id"));
+		return userRepository.getUserById(id).orElseThrow(()->new NullPointerException("No user found by id"));
 	}
 
 	public List<User> getAllUsers() {

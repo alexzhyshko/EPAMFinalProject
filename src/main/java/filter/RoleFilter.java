@@ -16,6 +16,7 @@ import application.context.annotation.component.Component;
 import main.java.auth.AuthContext;
 import main.java.entity.Role;
 import main.java.entity.User;
+import main.java.exception.UserNotFoundException;
 import main.java.service.TokenService;
 import main.java.service.UserService;
 
@@ -72,7 +73,7 @@ public class RoleFilter implements Filter {
 		}
 		// get user using JWT
 		String username = tokenService.getUsernameFromJwt(jwt);
-		User user = userService.getUserByUsernameOrNull(username);
+		User user = userService.getUserByUsername(username).orElseThrow(()->new UserNotFoundException("User not found"));
 		Role userRole = user.getRole();
 
 		// check if it is admin and grants all access

@@ -27,8 +27,8 @@ import main.java.repository.OrderRepository;
 @Component
 public class OrderService {
 
-	@Inject
-	private OrderRepository orderRepository;
+	@Inject("OrderRepositoryImpl")
+	public OrderRepository orderRepository;
 
 	@Inject
 	private UserService userService;

@@ -1,5 +1,6 @@
 package main.java.controller;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.apache.http.HttpStatus;
@@ -48,12 +49,12 @@ public class UserController {
 		if (username == null) {
 			return new ResponseEntity<>(localizator.getPropertyByLocale(userLocale, "incorrectUsername"), HttpStatus.SC_FORBIDDEN, ContentType.TEXT_PLAIN);
 		}
-		User user = userService.getUserByUsernameOrNull(username);
-		if (user == null) {
+		Optional<User> user = userService.getUserByUsername(username);
+		if (user.isEmpty()) {
 			return new ResponseEntity<>(localizator.getPropertyByLocale(userLocale, "userNotFound"), HttpStatus.SC_NOT_FOUND, ContentType.TEXT_PLAIN);
 		}
-		user.setPassword(null);
-		return new ResponseEntity<>(user, HttpStatus.SC_OK, ContentType.APPLICATION_JSON);
+		user.get().setPassword(null);
+		return new ResponseEntity<>(user.get(), HttpStatus.SC_OK, ContentType.APPLICATION_JSON);
 	}
 
 }

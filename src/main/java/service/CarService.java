@@ -14,8 +14,8 @@ import main.java.repository.CarRepository;
 @Component
 public class CarService {
 
-	@Inject
-	private CarRepository carRepository;
+	@Inject("CarRepositoryImpl")
+	public CarRepository carRepository;
 
 	private static final int MAX_DISTANCE_CONSTRAINT_KM = 100;
 	

@@ -20,34 +20,38 @@ import main.java.exception.LogoutException;
 @Component
 public class AuthService {
 
-	
 	@Inject
 	TokenService tokenService;
 
 	@Inject
 	LocalizationService localizator;
-	
+
 	@Inject
 	private HashService hashService;
-	
-	
+
 	@Inject
 	private UserService userService;
 
 	public boolean logout(User user) {
-		if(!userService.userExists(user)) {
+		if (!userService.userExists(user)) {
 			return false;
 		}
-		LoginRegister.removeFromRegisterIfLoggedIn(user.getUsername()).orElseThrow(()-> new LogoutException("User is not logged in"));
+		try {
+			LoginRegister.removeFromRegisterIfLoggedIn(user.getUsername())
+					.orElseThrow(() -> new LogoutException("User is not logged in"));
+		} catch (Exception e) {
+
+		}
 		AuthContext.deauthorize(user);
 		return true;
 	}
-	
+
 	private boolean login(User user) {
-		if(!userService.userExistsWithPasswordEquals(user)) {
+		if (!userService.userExistsWithPasswordEquals(user)) {
 			return false;
 		}
-		LoginRegister.addToRegisterIfNotLoggedIn(user.getUsername()).orElseThrow(()-> new DuplicateLoginException("User is already logged in"));
+		LoginRegister.addToRegisterIfNotLoggedIn(user.getUsername())
+				.orElseThrow(() -> new DuplicateLoginException("User is already logged in"));
 		AuthContext.authorize(user);
 		return true;
 	}
@@ -68,39 +72,37 @@ public class AuthService {
 	}
 
 	private LoginResponse buildLoginResponse(String jwt, String refreshToken, String username) {
-		return LoginResponse.builder()
-				.refreshToken(refreshToken)
-				.token(jwt)
-				.username(username)
-				.build();
+		return LoginResponse.builder().refreshToken(refreshToken).token(jwt).username(username).build();
 	}
 
 	private User buildUserFromLoginRequest(LoginRequest requestObj, String refreshToken) {
-		return User.builder().username(requestObj.getUsername()).password(hashService.hashStringMD5(requestObj.getPassword()))
-				.refreshToken(refreshToken).build();
+		return User.builder().username(requestObj.getUsername())
+				.password(hashService.hashStringMD5(requestObj.getPassword())).refreshToken(refreshToken).build();
 	}
 
 	public User register(RegisterRequest requestObj, String userLocale) {
 		User user = User.builder().name(requestObj.getName()).username(requestObj.getUsername())
 				.surname(requestObj.getSurname()).password(hashService.hashStringMD5(requestObj.getPassword())).build();
-		if(userService.tryCreateUser(user))
+		if (userService.tryCreateUser(user))
 			return user;
 		throw new DuplicateUserException(localizator.getPropertyByLocale(userLocale, "userExists"));
 	}
 
 	public RefreshTokenResponse refreshToken(String token, String userLocale) {
-		User user = AuthContext.getUserByToken(token).orElseThrow(()->new AuthException(localizator.getPropertyByLocale(userLocale, "notAuthorized")));
-		String refreshTokenOfUser = getRefreshTokenOfUser(user).orElseThrow(()->new IllegalArgumentException(localizator.getPropertyByLocale(userLocale, "refreshTokenNull")));
+		User user = AuthContext.getUserByToken(token)
+				.orElseThrow(() -> new AuthException(localizator.getPropertyByLocale(userLocale, "notAuthorized")));
+		String refreshTokenOfUser = getRefreshTokenOfUser(user).orElseThrow(
+				() -> new IllegalArgumentException(localizator.getPropertyByLocale(userLocale, "refreshTokenNull")));
 		String newToken = tokenService.generateJwt(user);
-		LoginRegister.addToRegisterIfNotLoggedIn(user.getUsername()).orElseThrow(()-> new DuplicateLoginException("User is already logged in"));
+		LoginRegister.addToRegisterIfNotLoggedIn(user.getUsername())
+				.orElseThrow(() -> new DuplicateLoginException("User is already logged in"));
 		user.setToken(newToken);
 		userService.updateToken(user, newToken);
 		return buildRefreshTokenResponse(newToken, refreshTokenOfUser);
 	}
 
 	private RefreshTokenResponse buildRefreshTokenResponse(String newToken, String refreshTokenOfUser) {
-		return RefreshTokenResponse.builder().refreshToken(refreshTokenOfUser)
-		.token(newToken).build();
+		return RefreshTokenResponse.builder().refreshToken(refreshTokenOfUser).token(newToken).build();
 	}
 
 	private Optional<String> getRefreshTokenOfUser(User user) {
@@ -109,9 +111,9 @@ public class AuthService {
 
 	public void logout(LogoutRequest request) {
 		String token = request.getToken();
-		User user = AuthContext.getUserByToken(token).orElseThrow(()->new LogoutException("Could not logout"));
+		User user = AuthContext.getUserByToken(token).orElseThrow(() -> new LogoutException("Could not logout"));
 		userService.deleteToken(token);
 		logout(user);
 	}
-	
+
 }

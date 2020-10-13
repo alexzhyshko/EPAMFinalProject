@@ -9,8 +9,8 @@ import main.java.repository.DriverRepository;
 @Component
 public class DriverService {
 
-	@Inject
-	private DriverRepository driverRepository;
+	@Inject("DriverRepositoryImpl")
+	public DriverRepository driverRepository;
 	
 	public Driver getDriverByCar(Car car) {
 		return driverRepository.getDriverByCar(car).orElseThrow(()-> new NullPointerException("No driver found for car"));

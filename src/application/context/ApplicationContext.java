@@ -71,5 +71,13 @@ public class ApplicationContext {
 		}
 		return prototypeComponents.get(clazz);
 	}
+	
+	public static Object findSingletonByName(String name) {
+		return getInstance(findSingletonClassByName(name));
+	}
+	
+	private static Class findSingletonClassByName(String name) {
+		return singletonComponents.keySet().stream().filter(fql->fql.getSimpleName().equals(name)).findFirst().orElseThrow(()->new NullPointerException("Class not found for name "+name));
+	}
 
 }
