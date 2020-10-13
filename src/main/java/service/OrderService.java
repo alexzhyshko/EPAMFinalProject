@@ -81,7 +81,6 @@ public class OrderService {
 			car = Optional.of(carService.getNearestCarByPlacesCountAndCategory(requestObj.getNumberOfPassengers(),
 					requestObj.getCarCategory(), userLocale, departureCoordinates));
 		} catch (Exception e) {
-			e.printStackTrace();
 			if (anyCategory) {
 				car = Optional.of(carService.getNearestCarByPlacesCount(requestObj.getNumberOfPassengers(), userLocale,
 						departureCoordinates));

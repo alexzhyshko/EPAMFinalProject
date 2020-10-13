@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import application.context.configuration.ConfigurationContext;
 import application.context.inject.Injector;
@@ -19,16 +21,20 @@ public class ApplicationContext {
 	protected static HashMap<Class, Object> singletonComponents = new HashMap<>();
 	protected static HashMap<Class, Object> prototypeComponents = new HashMap<>();
 
+	static Logger logger = Logger.getLogger("application");
+	
 	protected static void init(String path) throws IOException {
+		logger.info("Init started");
 		Map<String, String> files = Scanner.getAllFilesInProject(path);
 		AnnotationReader.process(files);
 		ConfigurationContext.performConfiguration();
 		Injector.inject();
 		RestContext.performRestMapping();
+		logger.info("Init finished");
 	}
 
 	protected static void destroy() {
-		System.out.println("Destroyed");
+		logger.info("Context destroyed");
 	}
 
 	public static Map<Class, Object> getSingletonComponents() {

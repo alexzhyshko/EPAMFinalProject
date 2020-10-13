@@ -6,6 +6,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.cert.CertificateException;
+import java.util.logging.Logger;
 
 import application.context.annotation.component.Component;
 import application.context.annotation.inject.Inject;
@@ -18,6 +19,7 @@ import main.java.jwt.JwtProvider;
 @Component
 public class TokenService {
 
+	static Logger logger = Logger.getLogger("main");
 	private KeyStore keyStore;
 	
 	@Inject
@@ -31,7 +33,7 @@ public class TokenService {
 			keyStore = KeyStore.getInstance("JKS");
 			keyStore.load(TokenService.class.getClassLoader().getResource("privatekey.jks").openStream(), "secret".toCharArray());
 		} catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 		}
 	}
 	
@@ -63,7 +65,7 @@ public class TokenService {
 		try {
 			return (PrivateKey)keyStore.getKey("tutorialspedia", "secret".toCharArray());
 		}catch(Exception e) {
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 		}
 		return null;
 	}

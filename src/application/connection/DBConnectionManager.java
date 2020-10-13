@@ -2,6 +2,8 @@ package application.connection;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.logging.Logger;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -16,6 +18,8 @@ public class DBConnectionManager {
 	private static final String DATASOURCE_NAME = "jdbc/conn";
 	private static BasicDataSource ds = null;
 
+	static Logger logger = Logger.getLogger("application");
+	
 	static {
 		Context initContext;
 		try {
@@ -23,7 +27,7 @@ public class DBConnectionManager {
 			Context envContext = (Context) initContext.lookup("java:/comp/env");
 			ds = (BasicDataSource) envContext.lookup(DATASOURCE_NAME);
 		} catch (NamingException e) {
-			e.printStackTrace();
+			logger.severe(e.getMessage()+"\n"+e.getExplanation());
 		}
 	}
 
@@ -31,7 +35,7 @@ public class DBConnectionManager {
 		try {
 			return ds.getConnection();
 		} catch (SQLException e) {
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 		}
 		throw new NullPointerException("Could not generate datasource");
 	}

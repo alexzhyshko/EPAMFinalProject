@@ -2,7 +2,6 @@ package application.utils;
 
 import java.io.IOException;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
@@ -14,6 +13,8 @@ import com.google.gson.Gson;
 
 import application.context.annotation.component.Component;
 import application.context.annotation.inject.Inject;
+import application.context.cast.Caster;
+import application.context.cast.CasterContext;
 import main.java.service.LocalizationService;
 
 @Component
@@ -46,24 +47,20 @@ public class HttpUtils {
 	}
 
 	public static <T> T parseInputParameter(HttpServletRequest req, String parameterName, Class<T> type) {
-		try {
-			if(type==String.class) {
-				return (T)req.getParameter(parameterName);
-			}
-			if(type==Integer.class) {
-				return (T)Integer.valueOf(req.getParameter(parameterName));
-			}
-			if(type==UUID.class) {
-				return (T)UUID.fromString(req.getParameter(parameterName));
-			}
-			if(type==Boolean.class) {
-				return (T)Boolean.valueOf(req.getParameter("sort").equalsIgnoreCase("true"));
-			}
-			throw new UnsupportedOperationException(type+" is not supported");
-		} catch (Exception e) {
-			e.printStackTrace();
+		String parameter = req.getParameter(parameterName);
+		if(parameter == null) {
 			throw new IllegalArgumentException("Incorrect parameter");
 		}
+		T result = null;
+		for(Caster caster : CasterContext.getCasters()) {
+			try {
+				result = (T)caster.cast(parameter, type);
+			}catch(ClassCastException e) {}
+		}
+		if(result == null) {
+			throw new UnsupportedOperationException("Unsupported parameter type. Please add your custom caster for this type");
+		}
+		return result;
 	}
 	
 	public static String parseAuthHeader(String authHeader) {

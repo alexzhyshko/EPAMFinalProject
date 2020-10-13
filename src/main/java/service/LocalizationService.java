@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 import application.context.annotation.component.Component;
 import application.context.scanner.Scanner;
@@ -11,6 +12,7 @@ import application.context.scanner.Scanner;
 @Component
 public class LocalizationService {
 
+	static Logger logger = Logger.getLogger("main");
 	private Map<String, Properties> locales = new HashMap<>();
 	
 	public LocalizationService() {
@@ -25,7 +27,7 @@ public class LocalizationService {
 			locales.put("UA", propertiesUA);
 			locales.put("RU", propertiesRU);
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 		}
 	}
 	

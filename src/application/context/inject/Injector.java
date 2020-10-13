@@ -4,12 +4,15 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map.Entry;
+import java.util.logging.Logger;
 
 import application.context.ApplicationContext;
 import application.context.annotation.inject.Inject;
 
 public class Injector {
 
+	static Logger logger = Logger.getLogger("application");
+	
 	public static void inject() {
 		HashMap<Class, Object> allComponents = new HashMap<>();
 		try {
@@ -38,6 +41,7 @@ public class Injector {
 				| NoSuchMethodException e) {
 			e.printStackTrace();
 		}
+		logger.info("DI successfully finished");
 	}
 
 }

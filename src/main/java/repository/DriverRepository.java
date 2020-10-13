@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 import application.connection.DBConnectionManager;
 import application.context.annotation.component.Component;
@@ -14,6 +15,8 @@ import main.java.entity.Driver;
 @Component
 public class DriverRepository {
 
+	static Logger logger = Logger.getLogger("main");
+	
 	private Connection getNewConnection() {
 		return DBConnectionManager.getConnection();
 	}
@@ -38,14 +41,14 @@ public class DriverRepository {
 			try {
 				connection.rollback();
 			} catch (SQLException e1) {
-				e1.printStackTrace();
+				logger.severe(e1.getMessage());
 			}
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 		}finally {
 			try {
 				connection.close();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				logger.severe(e.getMessage());
 			}
 		}
 		return Optional.empty();
@@ -72,14 +75,14 @@ public class DriverRepository {
 			try {
 				connection.rollback();
 			} catch (SQLException e1) {
-				e1.printStackTrace();
+				logger.severe(e1.getMessage());
 			}
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 		}finally {
 			try {
 				connection.close();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				logger.severe(e.getMessage());
 			}
 		}
 		return Optional.empty();

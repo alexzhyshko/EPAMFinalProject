@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 import application.connection.DBConnectionManager;
 import application.context.annotation.component.Component;
@@ -13,6 +14,8 @@ import main.java.entity.Coordinates;
 @Component
 public class CoordinateRepository {
 
+	static Logger logger = Logger.getLogger("main");
+	
 	private Connection getNewConnection() {
 		return DBConnectionManager.getConnection();
 	}
@@ -35,13 +38,13 @@ public class CoordinateRepository {
 				return Optional.empty();
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 			return Optional.empty();
 		} finally {
 			try {
 				connection.close();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				logger.severe(e.getMessage());
 			}
 		}
 	}
@@ -59,13 +62,13 @@ public class CoordinateRepository {
 				return Optional.empty();
 			} 
 		}catch (SQLException e) {
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 			return Optional.empty();
 		} finally {
 			try {
 				connection.close();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				logger.severe(e.getMessage());
 			}
 		}
 	}

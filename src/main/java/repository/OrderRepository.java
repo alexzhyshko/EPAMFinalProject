@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 import application.connection.DBConnectionManager;
 import application.context.annotation.component.Component;
@@ -27,6 +28,7 @@ import main.java.service.UserService;
 @Component
 public class OrderRepository {
 
+	static Logger logger = Logger.getLogger("main");
 
 	@Inject
 	private CarService carService;
@@ -66,10 +68,10 @@ public class OrderRepository {
 			try {
 				connection.rollback();
 			} catch (SQLException e1) {
-				e1.printStackTrace();
+				logger.severe(e1.getMessage());
 				return Optional.empty();
 			}
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 			return Optional.empty();
 		}
 
@@ -82,18 +84,18 @@ public class OrderRepository {
 			}
 			connection.commit();
 		} catch (SQLException e) {
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 			try {
 				connection.rollback();
 			} catch (SQLException e1) {
-				e1.printStackTrace();
+				logger.severe(e1.getMessage());
 				return Optional.empty();
 			}
 		} finally {
 			try {
 				connection.close();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				logger.severe(e.getMessage());
 			}
 		}
 
@@ -111,11 +113,11 @@ public class OrderRepository {
 			connection.commit();
 			return true;
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 			try {
 				connection.rollback();
 			} catch (SQLException e1) {
-				e1.printStackTrace();
+				logger.severe(e1.getMessage());
 				return false;
 			}
 			return false;
@@ -123,7 +125,7 @@ public class OrderRepository {
 			try {
 				connection.close();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				logger.severe(e.getMessage());
 			}
 		}
 	}
@@ -200,13 +202,13 @@ public class OrderRepository {
 				connection.commit();
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 			return new ArrayList<>();
 		} finally {
 			try {
 				connection.close();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				logger.severe(e.getMessage());
 			}
 		}
 		return result;
@@ -279,13 +281,13 @@ public class OrderRepository {
 				connection.commit();
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 			return Optional.empty();
 		} finally {
 			try {
 				connection.close();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				logger.severe(e.getMessage());
 			}
 		}
 		return Optional.empty();
@@ -379,7 +381,7 @@ public class OrderRepository {
 			try {
 				connection.close();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				logger.severe(e.getMessage());
 			}
 		}
 		return result;
@@ -400,13 +402,13 @@ public class OrderRepository {
 				return count;
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 			return Optional.empty();
 		} finally {
 			try {
 				connection.close();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				logger.severe(e.getMessage());
 			}
 		}
 	}
@@ -431,13 +433,13 @@ public class OrderRepository {
 				return count;
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 			return Optional.empty();
 		} finally {
 			try {
 				connection.close();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				logger.severe(e.getMessage());
 			}
 		}
 	}

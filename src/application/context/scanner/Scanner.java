@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 
@@ -15,6 +17,8 @@ import application.context.reader.PropertyReader;
 public class Scanner {
 
 	private static PropertyReader propertyReader = new PropertyReader();
+	static Logger logger = Logger.getLogger("application");
+	
 	
 	//key - filename
 	//value - relative path
@@ -26,6 +30,7 @@ public class Scanner {
 			String relativePath = file.getAbsolutePath().split("classes")[1].substring(1).replace("\\", ".");
 			result.put(file.getName().split(".class")[0], relativePath.split(".class")[0]);
 		}
+		logger.log(Level.INFO, "Found {0} classes", result.size());
 		return result;
 	}
 

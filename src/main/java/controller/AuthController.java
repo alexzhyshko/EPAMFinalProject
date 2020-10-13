@@ -1,8 +1,5 @@
 package main.java.controller;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.http.HttpStatus;
 import org.apache.http.entity.ContentType;
 
@@ -15,7 +12,6 @@ import application.context.annotation.mapping.RequestHeader;
 import application.context.annotation.mapping.RequestParameter;
 import application.context.annotation.mapping.RequestType;
 import application.entity.ResponseEntity;
-import application.utils.HttpUtils;
 import main.java.dto.request.LoginRequest;
 import main.java.dto.request.LogoutRequest;
 import main.java.dto.request.RegisterRequest;

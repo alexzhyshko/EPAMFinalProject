@@ -66,11 +66,11 @@ public class OrderController {
 
 	@Mapping(route = "/order/get/byUserId:arg:arg:arg", requestType = RequestType.GET)
 	public ResponseEntity<Object> getOrdersByUserId(@RequestParameter("type") String type,
-			@RequestParameter("userid") UUID userid,
+			@RequestParameter("userId") UUID userId,
 			@RequestParameter("page") Integer page,
 			@RequestHeader(USER_LOCALE_HEADER_NAME) String userLocale){
 		try {
-			UserOrdersResponse response = this.orderService.getOrdersByUserId(userLocale, type, userid, page);
+			UserOrdersResponse response = this.orderService.getOrdersByUserId(userLocale, type, userId, page);
 			return new ResponseEntity<>(response, HttpStatus.SC_OK, ContentType.APPLICATION_JSON);
 		} catch (Exception e) {
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.SC_NOT_FOUND, ContentType.TEXT_PLAIN);

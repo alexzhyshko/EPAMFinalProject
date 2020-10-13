@@ -1,5 +1,7 @@
 package main.java.jwt;
 
+import java.util.logging.Logger;
+
 import application.context.annotation.component.Component;
 import application.context.annotation.inject.Inject;
 import io.jsonwebtoken.Claims;
@@ -11,6 +13,8 @@ import main.java.service.TokenService;
 @Component
 public class JwtParser {
 
+	static Logger logger = Logger.getLogger("main");
+	
 	@Inject
 	private TokenService tokenService;
 
@@ -19,7 +23,7 @@ public class JwtParser {
 		try {
 			claims = Jwts.parser().setSigningKey(tokenService.getPrivateKey()).parseClaimsJws(jwt).getBody();
 		} catch (SignatureException e) {
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 			throw new NullPointerException("Claims parse failed");
 		}
 		return claims;

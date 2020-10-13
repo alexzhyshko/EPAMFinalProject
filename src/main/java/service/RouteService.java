@@ -5,6 +5,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
@@ -28,7 +29,7 @@ import main.java.exception.RouteNotFoundException;
 
 @Component
 public class RouteService {
-
+	static Logger logger = Logger.getLogger("main");
 	private PropertyReader propertyReader = new PropertyReader();
 
 	private String apiKey;
@@ -64,7 +65,7 @@ public class RouteService {
 			HttpEntity entity = response.getEntity();
 			return Optional.of(entity);
 		} catch (IOException e1) {
-			e1.printStackTrace();
+			logger.severe(e1.getMessage());
 			return Optional.empty();
 		}
 	}

@@ -2,13 +2,12 @@ package application.controller;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import com.google.gson.Gson;
 
 import application.context.ApplicationContext;
 import application.entity.ResponseEntity;
@@ -18,8 +17,7 @@ import application.utils.HttpUtils;
 public class BoilerplateController extends HttpServlet {
 
 	private static Router router = (Router) ApplicationContext.getSingletonComponent(Router.class);
-
-	private Gson gson = new Gson();
+	static Logger logger = Logger.getLogger("application");
 	
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException {
@@ -30,7 +28,7 @@ public class BoilerplateController extends HttpServlet {
 			}
 			prepareResponse(responseObject.get(), resp);
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 		}
 	}
 
@@ -44,8 +42,7 @@ public class BoilerplateController extends HttpServlet {
 			}
 			prepareResponse(responseObject.get(), resp);
 		} catch (IOException e) {
-			// TODO implement logging
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 		}
 	}
 
@@ -58,8 +55,7 @@ public class BoilerplateController extends HttpServlet {
 			}
 			prepareResponse(responseObject.get(), resp);
 		} catch (IOException e) {
-			// TODO implement logging
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 		}
 	}
 
@@ -72,8 +68,7 @@ public class BoilerplateController extends HttpServlet {
 			}
 			prepareResponse(responseObject.get(), resp);
 		} catch (IOException e) {
-			// TODO implement logging
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 		}
 	}
 	

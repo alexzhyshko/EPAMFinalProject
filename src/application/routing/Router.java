@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
@@ -25,6 +26,8 @@ import application.utils.HttpUtils;
 @Component
 public class Router {
 
+	static Logger logger = Logger.getLogger("application");
+	
 	private HashMap<String, Route> getRoutes;
 	private HashMap<String, Route> postRoutes;
 	private HashMap<String, Route> putRoutes;
@@ -86,7 +89,7 @@ public class Router {
 			return Optional.ofNullable(destinationMethod.invoke(ApplicationContext.getInstance(destinationClass), parameters));
 		} catch ( SecurityException | IllegalAccessException
 				| IllegalArgumentException | InvocationTargetException | NullPointerException e) {
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 			resp.setStatus(405);
 			return Optional.empty();
 		}
@@ -130,9 +133,8 @@ public class Router {
 		Object returnObject = route(req, resp, getRoutes);
 		try {
 			ResponseEntity<Object> responseEntity = ((Optional<ResponseEntity<Object>>)returnObject).get();
-			return Optional.ofNullable(responseEntity);
+			return Optional.of(responseEntity);
 		}catch(Exception e) {
-			e.printStackTrace();
 			return Optional.empty();
 		}
 		
@@ -144,7 +146,7 @@ public class Router {
 			ResponseEntity<Object> responseEntity = ((Optional<ResponseEntity<Object>>)returnObject).get();
 			return Optional.ofNullable(responseEntity);
 		}catch(Exception e) {
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 			return Optional.empty();
 		}
 	}
@@ -155,7 +157,7 @@ public class Router {
 			ResponseEntity<Object> responseEntity = ((Optional<ResponseEntity<Object>>)returnObject).get();
 			return Optional.ofNullable(responseEntity);
 		}catch(Exception e) {
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 			return Optional.empty();
 		}
 	}
@@ -166,7 +168,7 @@ public class Router {
 			ResponseEntity<Object> responseEntity = ((Optional<ResponseEntity<Object>>)returnObject).get();
 			return Optional.ofNullable(responseEntity);
 		}catch(Exception e) {
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 			return Optional.empty();
 		}
 	}

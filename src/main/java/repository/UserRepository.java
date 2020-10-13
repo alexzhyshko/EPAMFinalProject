@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 import application.connection.DBConnectionManager;
 import application.context.annotation.component.Component;
@@ -18,6 +19,8 @@ import main.java.entity.User;
 @Component
 public class UserRepository {
 
+	static Logger logger = Logger.getLogger("main");
+	
 	private Connection getNewConnection() {
 		return DBConnectionManager.getConnection();
 	}
@@ -34,17 +37,17 @@ public class UserRepository {
 				createTokenForUserByUsername(username, newToken);
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 			try {
 				connection.rollback();
 			} catch (SQLException e1) {
-				e1.printStackTrace();
+				logger.severe(e1.getMessage());
 			}
 		}finally {
 			try {
 				connection.close();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				logger.severe(e.getMessage());
 			}
 		}
 	}
@@ -61,17 +64,17 @@ public class UserRepository {
 				createTokenForUserByUsername(username, newToken);
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 			try {
 				connection.rollback();
 			} catch (SQLException e1) {
-				e1.printStackTrace();
+				logger.severe(e1.getMessage());
 			}
 		}finally {
 			try {
 				connection.close();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				logger.severe(e.getMessage());
 			}
 		}
 	}
@@ -85,17 +88,17 @@ public class UserRepository {
 			ps.executeUpdate();
 			connection.commit();
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 			try {
 				connection.rollback();
 			} catch (SQLException e1) {
-				e1.printStackTrace();
+				logger.severe(e1.getMessage());
 			}
 		}finally {
 			try {
 				connection.close();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				logger.severe(e.getMessage());
 			}
 		}
 	}
@@ -109,17 +112,17 @@ public class UserRepository {
 			ps.executeUpdate();
 			connection.commit();
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 			try {
 				connection.rollback();
 			} catch (SQLException e1) {
-				e1.printStackTrace();
+				logger.severe(e1.getMessage());
 			}
 		}finally {
 			try {
 				connection.close();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				logger.severe(e.getMessage());
 			}
 		}
 	}
@@ -150,16 +153,16 @@ public class UserRepository {
 			try {
 				connection.rollback();
 			} catch (SQLException e1) {
-				e1.printStackTrace();
+				logger.severe(e1.getMessage());
 				return false;
 			}
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 			return false;
 		}finally {
 			try {
 				connection.close();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				logger.severe(e.getMessage());
 			}
 		}
 	}
@@ -193,14 +196,14 @@ public class UserRepository {
 			try {
 				connection.rollback();
 			} catch (SQLException e1) {
-				e1.printStackTrace();
+				logger.severe(e1.getMessage());
 			}
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 		}finally {
 			try {
 				connection.close();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				logger.severe(e.getMessage());
 			}
 		}
 		return null;
@@ -234,14 +237,14 @@ public class UserRepository {
 			try {
 				connection.rollback();
 			} catch (SQLException e1) {
-				e1.printStackTrace();
+				logger.severe(e1.getMessage());
 			}
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 		}finally {
 			try {
 				connection.close();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				logger.severe(e.getMessage());
 			}
 		}
 		return Optional.empty();
@@ -276,14 +279,14 @@ public class UserRepository {
 			try {
 				connection.rollback();
 			} catch (SQLException e1) {
-				e1.printStackTrace();
+				logger.severe(e1.getMessage());
 			}
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 		}finally {
 			try {
 				connection.close();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				logger.severe(e.getMessage());
 			}
 		}
 		return Optional.empty();
@@ -315,14 +318,14 @@ public class UserRepository {
 			try {
 				connection.rollback();
 			} catch (SQLException e1) {
-				e1.printStackTrace();
+				logger.severe(e1.getMessage());
 			}
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 		}finally {
 			try {
 				connection.close();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				logger.severe(e.getMessage());
 			}
 		}
 		return Optional.empty();
@@ -351,14 +354,14 @@ public class UserRepository {
 			try {
 				connection.rollback();
 			} catch (SQLException e1) {
-				e1.printStackTrace();
+				logger.severe(e1.getMessage());
 			}
-			e.printStackTrace();
+			logger.severe(e.getMessage());
 		}finally {
 			try {
 				connection.close();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				logger.severe(e.getMessage());
 			}
 		}
 		return result;

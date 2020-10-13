@@ -3,6 +3,8 @@ package application.context.rest;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import application.context.annotation.component.Component;
 import application.context.annotation.inject.Inject;
@@ -18,6 +20,8 @@ public class RestContext {
 	
 	private static List<Class> restClasses = new ArrayList<>();
 
+	static Logger logger = Logger.getLogger("application");
+	
 	public static void addRest(Class restClass) {
 		restClasses.add(restClass);
 	}
@@ -46,6 +50,7 @@ public class RestContext {
 				}
 			}
 		}
+		logger.log(Level.INFO, "Rest configuration finished, found {0} Rest Controllers", restClasses.size());
 	}
 	
 	
